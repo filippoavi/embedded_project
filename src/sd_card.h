@@ -6,6 +6,7 @@
 #include "SPI.h"
 
 extern SdFs sd;
+extern SdFile myFile;
 extern cid_t cid;
 extern csd_t csd;
 extern scr_t scr;
@@ -13,17 +14,8 @@ extern uint8_t cmd6Data[64];
 extern uint32_t eraseSize;
 extern uint32_t ocr;
 
-void hexDmp(void* reg, uint8_t size);
-void cidDmp();
-void clearSerialInput();
-void csdDmp();
-void errorPrint();
-bool mbrDmp();
-void dmpVol();
-void printCardType();
-void printConfig(SdSpiConfig config);
-void printConfig(SdioConfig config);
 void sdSetup();
 void sdCheck();
+void sdWrite(String line);
 
 #endif // SD_CARD_H

@@ -8,7 +8,7 @@
 #include "sd_card.h"
 
 // Set DISABLE_CS_PIN to disable a second SPI device. Set -1 to disable this feature.
-const int8_t DISABLE_CS_PIN = 31;
+const int8_t DISABLE_CS_PIN = -1; // pin 31 is internal SPI0 CS connected to BHI260AP
 // SD SPI Chip Select pin
 const uint8_t SD_CS_PIN = 6;
 // SD card configuration
@@ -16,6 +16,7 @@ const uint8_t SD_CS_PIN = 6;
 
 //------------------------------------------------------------------------------
 SdFs sd;
+SdFile myFile;
 cid_t cid;
 csd_t csd;
 scr_t scr;
@@ -192,17 +193,6 @@ void printConfig(SdioConfig config) {
 void sdSetup() {
   cout << F("SdFat version: ") << SD_FAT_VERSION_STR << endl;
   printConfig(SD_CONFIG);
-}
-//------------------------------------------------------------------------------
-void sdCheck() {
-  // Read any existing Serial data.
-  clearSerialInput();
-
-  // F stores strings in flash to save RAM
-  cout << F("\nType any character to proceed with the SD card check\n");
-  while (!Serial.available()) {
-    yield();
-  }
   uint32_t t = millis();
   if (!sd.cardBegin(SD_CONFIG)) {
     cout << F(
@@ -220,6 +210,22 @@ void sdCheck() {
   }
   t = millis() - t;
   cout << F("init time: ") << dec << t << " ms" << endl;
+  if (!sd.volumeBegin()) {
+    cout << F("\nvolumeBegin failed. Is the card formatted?\n");
+    errorPrint();
+    return;
+  }
+}
+//------------------------------------------------------------------------------
+void sdCheck() {
+  // Read any existing Serial data.
+  clearSerialInput();
+
+  // F stores strings in flash to save RAM
+  cout << F("\nType any character to proceed with the SD card check\n");
+  while (!Serial.available()) {
+    yield();
+  }
 
   if (!sd.card()->readCID(&cid) || !sd.card()->readCSD(&csd) ||
       !sd.card()->readOCR(&ocr) || !sd.card()->readSCR(&scr)) {
@@ -243,14 +249,20 @@ void sdCheck() {
   if (!mbrDmp()) {
     return;
   }
-  if (!sd.volumeBegin()) {
-    cout << F("\nvolumeBegin failed. Is the card formatted?\n");
-    errorPrint();
-    return;
-  }
   dmpVol();
+  clearSerialInput();
   cout << F("\nType any character to continue\n");
   while (!Serial.available()) {
     yield();
   }
+}
+//------------------------------------------------------------------------------
+void sdWrite(String line) {
+  if (!myFile.open("data.csv", O_RDWR | O_CREAT | O_AT_END)) {
+    sd.errorHalt("\nopening data.csv for write failed");
+  }
+  // if the file opened okay, write to it:
+  myFile.println(line);
+  // close the file:
+  myFile.close();
 }
