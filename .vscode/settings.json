@@ -1,0 +1,6 @@
+{
+  "files.associations": {
+    "arduino_bhy2.h": "c",
+    "*.tcc": "cpp"
+  }
+}
