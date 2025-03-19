@@ -16,6 +16,7 @@ extern uint32_t ocr;
 
 void sdSetup();
 void sdCheck();
+void sdTestWrite();
 void sdWrite(String line);
 
 #endif // SD_CARD_H

@@ -3,6 +3,7 @@
     "arduino_bhy2.h": "c",
     "*.tcc": "cpp",
     "optional": "cpp",
-    "system_error": "cpp"
+    "system_error": "cpp",
+    "cmath": "cpp"
   }
 }

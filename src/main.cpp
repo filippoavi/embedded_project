@@ -1,5 +1,4 @@
 #include "Nicla_System.h"
-//#include "ArduinoLowPower.h"  // Power management (not working for this board)
 #include "sd_card.h"
 #include "sensors.h"
 #define DISABLE_FS_H_WARNING  // Disable warning for type File not defined.
@@ -11,6 +10,22 @@ bool initializeData = true; // If true: delete and reinitialize data.csv file
 
 // Sensors ---------------------------------------------------------------------
 unsigned long sensorUpdateInterval = 5000; // 5 seconds 
+static float maxAccelMag = 0;
+static float accelMagnitude;
+static float maxGyroMag = 0;
+static float gyroMagnitude;
+static int16_t maxAccX = 0;
+static int16_t maxAccY = 0;
+static int16_t maxAccZ = 0;
+static int16_t curAccX;
+static int16_t curAccY;
+static int16_t curAccZ;
+static int16_t maxGyrX = 0;
+static int16_t maxGyrY = 0;
+static int16_t maxGyrZ = 0;
+static int16_t curGyrX;
+static int16_t curGyrY;
+static int16_t curGyrZ;
 //------------------------------------------------------------------------------
 
 //------------------------------------------------------------------------------
@@ -36,29 +51,7 @@ void setup() {
   // SD card check
   if (sdDiagnosticCheck) {
     sdCheck();
-    // Test writing to SD card
-    if (!myFile.open("test.txt", O_RDWR | O_CREAT | O_AT_END)) {
-      sd.errorHalt("\nopening test.txt for write failed");
-    }
-    // if the file opened okay, write to it:
-    Serial.print("\nWriting to test.txt...");
-    myFile.println("If you are reading this, writing and reading to the SD card works!");
-    // close the file:
-    myFile.close();
-    Serial.println("done.");
-    // re-open the file for reading:
-    if (!myFile.open("test.txt", O_RDWR)) {
-      sd.errorHalt("opening test.txt for read failed");
-    }
-    Serial.println("test.txt:");
-
-    // read from the file until there's nothing else in it:
-    int data;
-    while ((data = myFile.read()) >= 0) {
-      Serial.write(data);
-    }
-    // remove the file:
-    if (!myFile.remove()) sd.errorHalt("Error file.remove");
+    sdTestWrite();
   }
 
   // Initialize the CSV file in the SD card
@@ -79,6 +72,7 @@ void setup() {
 //------------------------------------------------------------------------------
 void loop() {
   static auto printTime = millis();
+  static auto accelTime = millis();
 
   // Update function should be continuously polled
   BHY2.update();
@@ -86,14 +80,56 @@ void loop() {
   // Check sensor values every sensorUpdateInterval milliseconds
   if (millis() - printTime >= sensorUpdateInterval) {
     printTime = millis();
-    sensorReadSerial();
+    //sensorReadSerial();
 
     // Write sensor data to SD card
-    String line = sensorReadAccX() + "," + sensorReadAccY() + "," + sensorReadAccZ() + "," +
-                  sensorReadGyroX() + "," + sensorReadGyroY() + "," + sensorReadGyroZ() + "," +
+    String line = String(maxAccX) + "," + String(maxAccY) + "," + String(maxAccZ) + "," +
+                  String(maxGyrX) + "," + String(maxGyrY) + "," + String(maxGyrZ) + "," +
                   sensorReadMagX() + "," + sensorReadMagY() + "," + sensorReadMagZ() + "," +
                   sensorReadTemperature() + "," + sensorReadPressure() + "," +
                   sensorReadVOC() + "," + sensorReadCO2() + "," + sensorReadHumidity();
     sdWrite(line);
+    // So typically a line of the CSV takes more or less 80 bytes of memory
+    // 1 reading every 5 seconds for 6 months is 82.944.000 bytes, so 0.1 gigabytes
+    Serial.println(line);
+
+    // Reset the maximum acceleration and rotation speed value
+    maxAccelMag = 0;
+    maxAccX = 0;
+    maxAccY = 0;
+    maxAccZ = 0;
+    maxGyroMag = 0;
+    maxGyrX = 0;
+    maxGyrY = 0;
+    maxGyrZ = 0;
+  }
+
+  // Check the magnitude of the acceleration and rotation speed at 100 Hz and memorize the maximum value
+  if(millis() - accelTime >= 10) {
+    accelTime = millis();
+    curAccX = accel.x();
+    curAccY = accel.y();
+    curAccZ = accel.z();
+    curGyrX = gyro.x();
+    curGyrY = gyro.y();
+    curGyrZ = gyro.z();
+    accelMagnitude = sqrt(curAccX * curAccX + curAccY * curAccY + curAccZ * curAccZ);
+    gyroMagnitude = sqrt(curGyrX * curGyrX + curGyrY * curGyrY + curGyrZ * curGyrZ);
+    if(accelMagnitude > maxAccelMag) {
+      maxAccelMag = accelMagnitude;
+      maxAccX = curAccX;
+      maxAccY = curAccY;
+      maxAccZ = curAccZ;
+/*       Serial.println("New max acceleration detected: ");
+      Serial.println(maxAccelMag); */
+    }
+    if(gyroMagnitude > maxGyroMag) {
+      maxGyroMag = gyroMagnitude;
+      maxGyrX = curGyrX;
+      maxGyrY = curGyrY;
+      maxGyrZ = curGyrZ;
+/*       Serial.println("New max rotation speed detected: ");
+      Serial.println(maxGyroMag); */
+    }
   }
 }
