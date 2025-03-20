@@ -90,7 +90,7 @@ void loop() {
                   sensorReadVOC() + "," + sensorReadCO2() + "," + sensorReadHumidity();
     sdWrite(line);
     // So typically a line of the CSV takes more or less 80 bytes of memory
-    // 1 reading every 5 seconds for 6 months is 82.944.000 bytes, so 0.1 gigabytes
+    // 1 reading every 5 seconds for 60 days is 82.944.000 bytes, so 0.1 gigabytes
     Serial.println(line);
 
     // Reset the maximum acceleration and rotation speed value
