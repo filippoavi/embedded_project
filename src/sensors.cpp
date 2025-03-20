@@ -14,6 +14,7 @@ void sensorSetup() {
   BHY2.begin();
   accel.begin();        // Accelerometer
   gyro.begin();         // Gyroscope
+  mag.begin();          // Magnetometer
   temperature.begin();  // Temperature
   pressure.begin();     // Pressure
   bsec.begin();         // BME sensor readings
