@@ -3,21 +3,8 @@
 
 RTC_DS3231 rtc;
 
-Sensor temp(SENSOR_ID_TEMP);
-Sensor gas(SENSOR_ID_GAS);
 
-void setup () {
-
-  Serial.begin(57600);
-
-  BHY2.begin();
-  temp.begin();
-  gas.begin();
-
-#ifndef ESP8266
-  while (!Serial); // wait for serial port to connect. Needed for native USB
-#endif
-
+void rtcSetup() {
   if (! rtc.begin()) {
     Serial.println("Couldn't find RTC");
     Serial.flush();
@@ -43,35 +30,11 @@ void setup () {
 }
 
 
-unsigned long counter = 0;
+// unsigned long counter = 0;
 
-DateTime now;
-
-void loop () {
-
-    BHY2.update();
-    now = rtc.now();
-
-    Serial.print(now.year(), DEC);
-    Serial.print('/');
-    Serial.print(now.month(), DEC);
-    Serial.print('/');
-    Serial.print(now.day(), DEC);
-    Serial.print(' ');
-    Serial.print(now.hour(), DEC);
-    Serial.print(':');
-    Serial.print(now.minute(), DEC);
-    Serial.print(':');
-    Serial.print(now.second(), DEC);
-
-    Serial.print(" RTC Temperature: ");
-    Serial.print(rtc.getTemperature());
-    Serial.print(" C");
-
-    Serial.print(String(" BHY - Temperature: ") + String(temp.value(),3));
-    Serial.print(' ');
-    Serial.print(String("Gas: ") + String(gas.value(),3));
-    Serial.println();
-
-    delay(1000);
+String rtcReadTime() {
+  DateTime now = rtc.now();
+  return String(now.year(), DEC) + "/" + String(now.month(), DEC) + "/" + String(now.day(), DEC) + " " +
+         String(now.hour(), DEC) + ":" + String(now.minute(), DEC) + ":" + String(now.second(), DEC);
 }
+

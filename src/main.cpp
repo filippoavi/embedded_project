@@ -1,6 +1,7 @@
 #include "Nicla_System.h"
 #include "sd_card.h"
 #include "sensors.h"
+#include "rtc.h"
 #define DISABLE_FS_H_WARNING  // Disable warning for type File not defined.
 
 // SD card ---------------------------------------------------------------------
@@ -42,6 +43,7 @@ void setup() {
   // Initialize sensors and SD card
   sensorSetup();
   sdSetup();
+  rtcSetup();
 
   // Signal startup completed through LED blink
   nicla::leds.setColor(green);
@@ -64,7 +66,7 @@ void setup() {
     if (!myFile.open("data.csv", O_RDWR | O_CREAT | O_AT_END)) {
       sd.errorHalt("\nopening data.csv for write failed");
     }
-    myFile.println("acc_X,acc_Y,acc_Z,gyro_X,gyro_Y,gyro_Z,mag_X,mag_Y,mag_Z,temperature,pressure,VOC,CO2,Humidity");
+    myFile.println("time,acc_X,acc_Y,acc_Z,gyro_X,gyro_Y,gyro_Z,mag_X,mag_Y,mag_Z,temperature,pressure,VOC,CO2,Humidity");
     myFile.close();
     Serial.println("done.");
   }
@@ -83,7 +85,7 @@ void loop() {
     //sensorReadSerial();
 
     // Write sensor data to SD card
-    String line = String(maxAccX) + "," + String(maxAccY) + "," + String(maxAccZ) + "," +
+    String line = rtcReadTime()+ "," + String(maxAccX) + "," + String(maxAccY) + "," + String(maxAccZ) + "," +
                   String(maxGyrX) + "," + String(maxGyrY) + "," + String(maxGyrZ) + "," +
                   sensorReadMagX() + "," + sensorReadMagY() + "," + sensorReadMagZ() + "," +
                   sensorReadTemperature() + "," + sensorReadPressure() + "," +
