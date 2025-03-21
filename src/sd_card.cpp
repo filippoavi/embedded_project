@@ -12,7 +12,7 @@ const int8_t DISABLE_CS_PIN = -1; // pin 31 is internal SPI0 CS connected to BHI
 // SD SPI Chip Select pin
 const uint8_t SD_CS_PIN = 6;
 // SD card configuration
-#define SD_CONFIG SdSpiConfig(SD_CS_PIN, SHARED_SPI, SD_SCK_MHZ(2))
+#define SD_CONFIG SdSpiConfig(SD_CS_PIN, SHARED_SPI, SD_SCK_MHZ(16))
 
 //------------------------------------------------------------------------------
 SdFs sd;
@@ -283,12 +283,15 @@ void sdTestWrite() {
   if (!myFile.remove()) sd.errorHalt("Error file.remove");
 }
 //------------------------------------------------------------------------------
-void sdWrite(String line) {
-  if (!myFile.open("data.csv", O_RDWR | O_CREAT | O_AT_END)) {
-    sd.errorHalt("\nopening data.csv for write failed");
+void sdWrite(String line, const char* filename, bool keepOpen) {
+  if (!myFile.open(filename, O_RDWR | O_CREAT | O_AT_END)) {
+    sd.errorHalt("\nopening for write failed");
   }
   // if the file opened okay, write to it:
   myFile.println(line);
   // close the file:
-  myFile.close();
+  if (!keepOpen)
+  {
+    myFile.close();
+  }  
 }
