@@ -2,6 +2,7 @@
 #include "sd_card.h"
 #include "sensors.h"
 #include "rtc.h"
+#include "usb.h"
 #define DISABLE_FS_H_WARNING  // Disable warning for type File not defined.
 
 // SD card ---------------------------------------------------------------------
@@ -213,4 +214,6 @@ void loop() {
       eventCounter = 0;
     }
   }
+
+  usbLoop();
 }
