@@ -95,7 +95,7 @@ void setup() {
     if (!myFile.open("event.csv", O_RDWR | O_CREAT | O_AT_END)) {
       sd.errorHalt("\nopening event.csv for write failed");
     }
-    myFile.println("time,acc_X,acc_Y,acc_Z,gyro_X,gyro_Y,gyro_Z");
+    myFile.println("time,Acceleration_X,Acceleration_Y,Acceleration_Z,Gyroscope_X,Gyroscope_Y,Gyroscope_Z");
     myFile.close();
     Serial.println("done.");
   }
