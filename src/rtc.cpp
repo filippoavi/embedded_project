@@ -34,7 +34,7 @@ void rtcSetup() {
 
 String rtcReadTime() {
   DateTime now = rtc.now();
-  return String(now.year(), DEC) + "/" + String(now.month(), DEC) + "/" + String(now.day(), DEC) + " " +
+  return String(now.year(), DEC) + "/" + String(now.month(), DEC) + "/" + String(now.day(), DEC) + "-" +
          String(now.hour(), DEC) + ":" + String(now.minute(), DEC) + ":" + String(now.second(), DEC);
 }
 

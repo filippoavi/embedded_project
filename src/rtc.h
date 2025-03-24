@@ -1,3 +1,6 @@
+#ifndef RTC_H
+#define RTC_H
+
 #include "RTClib.h"
 #include "Arduino.h"
 #include "Arduino_BHY2.h"
@@ -9,3 +12,5 @@ extern Sensor gas(SENSOR_ID_GAS); */
 
 void rtcSetup();
 String rtcReadTime();
+
+#endif // RTC_H

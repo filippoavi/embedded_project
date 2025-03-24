@@ -29,6 +29,26 @@ static int16_t curGyrY;
 static int16_t curGyrZ;
 //------------------------------------------------------------------------------
 
+// Event memory ----------------------------------------------------------------
+int accTreshold = 6000;
+int gyrTreshold = 200;
+const int eventMemorySize = 10;
+static int16_t eventMemory[6][eventMemorySize];
+static String eventTime[eventMemorySize];
+static int memoryIndex = 0;
+static int eventCounter = 0;
+bool eventDetected = false;
+static String curTime;
+//------------------------------------------------------------------------------
+
+//------------------------------------------------------------------------------
+void initEventMemory() {
+  for(int i = 0; i < 6; i++) {
+    for(int j = 0; j < eventMemorySize; j++) {
+      eventMemory[i][j] = 0;
+    }
+  } 
+}
 //------------------------------------------------------------------------------
 void setup() {
   nicla::begin();
@@ -40,15 +60,13 @@ void setup() {
     yield();
   }
 
-  // Initialize sensors and SD card
+  // Initialize sensors, SD card and RTC
   sensorSetup();
   sdSetup();
   rtcSetup();
 
-  // Signal startup completed through LED blink
-  nicla::leds.setColor(green);
-  delay(1000);
-  nicla::leds.setColor(off);
+  // Initialize event memory to 0
+  initEventMemory();
 
   // SD card check
   if (sdDiagnosticCheck) {
@@ -58,18 +76,34 @@ void setup() {
 
   // Initialize the CSV file in the SD card
   if(initializeData){
-    Serial.print("Initializing data.csv...");
-    if (!myFile.open("data.csv", O_RDWR)) {
-      sd.errorHalt("\nopening data.csv for remove failed");
+    Serial.print("Initializing data.csv and event.csv...");
+    // Remove previous data.csv file
+    if (myFile.open("data.csv", O_RDWR)) {
+      if (!myFile.remove()) sd.errorHalt("Error data.csv file.remove");
     }
-    if (!myFile.remove()) sd.errorHalt("Error data.csv file.remove");
+    // Remove previous event.csv file
+    if (myFile.open("event.csv", O_RDWR)) {
+      if (!myFile.remove()) sd.errorHalt("Error event.csv file.remove");
+    }
+    // Create new data.csv file
     if (!myFile.open("data.csv", O_RDWR | O_CREAT | O_AT_END)) {
       sd.errorHalt("\nopening data.csv for write failed");
     }
     myFile.println("time,Acceleration_X,Acceleration_Y,Acceleration_Z,Gyroscope_X,Gyroscope_Y,Gyroscope_Z,Magnetometer_X,Magnetometer_Y,Magnetometer_Z,Temperature,Pressure,VOC,CO2,Humidity");
     myFile.close();
+    // Create new event.csv file
+    if (!myFile.open("event.csv", O_RDWR | O_CREAT | O_AT_END)) {
+      sd.errorHalt("\nopening event.csv for write failed");
+    }
+    myFile.println("time,acc_X,acc_Y,acc_Z,gyro_X,gyro_Y,gyro_Z");
+    myFile.close();
     Serial.println("done.");
   }
+
+  // Signal startup completed through green LED blink
+  nicla::leds.setColor(green);
+  delay(3000);
+  nicla::leds.setColor(off);
 }
 //------------------------------------------------------------------------------
 void loop() {
@@ -85,14 +119,15 @@ void loop() {
     //sensorReadSerial();
 
     // Write sensor data to SD card
-    String line = rtcReadTime()+ "," + String(maxAccX) + "," + String(maxAccY) + "," + String(maxAccZ) + "," +
+    String line = rtcReadTime() + "," +
+                  String(maxAccX) + "," + String(maxAccY) + "," + String(maxAccZ) + "," +
                   String(maxGyrX) + "," + String(maxGyrY) + "," + String(maxGyrZ) + "," +
                   sensorReadMagX() + "," + sensorReadMagY() + "," + sensorReadMagZ() + "," +
                   sensorReadTemperature() + "," + sensorReadPressure() + "," +
                   sensorReadVOC() + "," + sensorReadCO2() + "," + sensorReadHumidity();
-    sdWrite(line);
-    // So typically a line of the CSV takes more or less 80 bytes of memory
-    // 1 reading every 5 seconds for 60 days is 82.944.000 bytes, so 0.1 gigabytes
+    sdWrite(line, "data.csv");
+    // So typically a line of the CSV takes more or less 80-100 bytes of memory
+    // 1 reading every 5 seconds for 60 days is 100-150 megabytes
     Serial.println(line);
 
     // Reset the maximum acceleration and rotation speed value
@@ -106,8 +141,8 @@ void loop() {
     maxGyrZ = 0;
   }
 
-  // Check the magnitude of the acceleration and rotation speed at 100 Hz and memorize the maximum value
-  if(millis() - accelTime >= 10) {
+  // Poll acceleration and rotation speed at 10 Hz
+  if(millis() - accelTime >= 100) {
     accelTime = millis();
     curAccX = accel.x();
     curAccY = accel.y();
@@ -115,23 +150,67 @@ void loop() {
     curGyrX = gyro.x();
     curGyrY = gyro.y();
     curGyrZ = gyro.z();
+    curTime = rtcReadTime();
     accelMagnitude = sqrt(curAccX * curAccX + curAccY * curAccY + curAccZ * curAccZ);
     gyroMagnitude = sqrt(curGyrX * curGyrX + curGyrY * curGyrY + curGyrZ * curGyrZ);
+    // Memorize the maximum value of acceleration and rotation speed of the last 5 seconds
     if(accelMagnitude > maxAccelMag) {
       maxAccelMag = accelMagnitude;
       maxAccX = curAccX;
       maxAccY = curAccY;
       maxAccZ = curAccZ;
-/*       Serial.println("New max acceleration detected: ");
-      Serial.println(maxAccelMag); */
     }
     if(gyroMagnitude > maxGyroMag) {
       maxGyroMag = gyroMagnitude;
       maxGyrX = curGyrX;
       maxGyrY = curGyrY;
       maxGyrZ = curGyrZ;
-/*       Serial.println("New max rotation speed detected: ");
-      Serial.println(maxGyroMag); */
+    }
+
+    // Keep track of the last eventMemorySize acceleration and rotation speed values
+    eventTime[memoryIndex] = curTime;
+    eventMemory[0][memoryIndex] = curAccX;
+    eventMemory[1][memoryIndex] = curAccY;
+    eventMemory[2][memoryIndex] = curAccZ;
+    eventMemory[3][memoryIndex] = curGyrX;
+    eventMemory[4][memoryIndex] = curGyrY;
+    eventMemory[5][memoryIndex] = curGyrZ;
+
+    if(memoryIndex < eventMemorySize-1) {
+      memoryIndex++;
+    }
+    else {
+      memoryIndex = 0;
+    }
+    // If acceleration or rotation speed over a certain treshold, save to the SD card
+    if((accelMagnitude > accTreshold || gyroMagnitude > gyrTreshold) && !eventDetected) {
+      // Save previous eventMemorySize values before the event
+      for(int i = 0; i < eventMemorySize - 1; i++) {
+        String line = eventTime[(i + memoryIndex + 1)%eventMemorySize] + "[" + String(i) + "]" +
+                      String(eventMemory[0][(i + memoryIndex)%eventMemorySize]) + "," + String(eventMemory[1][(i + memoryIndex)%eventMemorySize]) + "," + 
+                      String(eventMemory[2][(i + memoryIndex)%eventMemorySize]) + "," + String(eventMemory[3][(i + memoryIndex)%eventMemorySize]) + "," + 
+                      String(eventMemory[4][(i + memoryIndex)%eventMemorySize]) + "," + String(eventMemory[5][(i + memoryIndex)%eventMemorySize]);
+        if (i < eventMemorySize-1) {
+          sdWrite(line, "event.csv", true);
+        }
+        else {
+          sdWrite(line, "event.csv");
+        }
+      }
+      eventDetected = true;
+      eventCounter = 0;
+    }
+    // Save the next eventMemorySize values after the event
+    if (eventDetected && eventCounter < eventMemorySize) {
+      String line = curTime + "," +
+                    String(curAccX) + "," + String(curAccY) + "," + String(curAccZ) + "," +
+                    String(curGyrX) + "," + String(curGyrY) + "," + String(curGyrZ);
+      sdWrite(line, "event.csv");
+      eventCounter++;
+    }
+    else if (eventCounter > eventMemorySize-1) {
+      eventDetected = false;
+      eventCounter = 0;
     }
   }
 }
