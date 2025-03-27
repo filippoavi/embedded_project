@@ -12,7 +12,7 @@ const int8_t DISABLE_CS_PIN = -1; // pin 31 is internal SPI0 CS connected to BHI
 // SD SPI Chip Select pin
 const uint8_t SD_CS_PIN = 6;
 // SD card configuration
-#define SD_CONFIG SdSpiConfig(SD_CS_PIN, SHARED_SPI, SD_SCK_MHZ(16))
+#define SD_CONFIG SdSpiConfig(SD_CS_PIN, SHARED_SPI, SD_SCK_MHZ(24))
 
 //------------------------------------------------------------------------------
 SdFs sd;

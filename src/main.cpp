@@ -2,7 +2,8 @@
 #include "sd_card.h"
 #include "sensors.h"
 #include "rtc.h"
-#include "usb.h"
+//#include "usb.h"
+
 #define DISABLE_FS_H_WARNING  // Disable warning for type File not defined.
 
 // SD card ---------------------------------------------------------------------
@@ -12,6 +13,7 @@ bool initializeData = true; // If true: delete and reinitialize data.csv file
 
 // Sensors ---------------------------------------------------------------------
 unsigned long sensorUpdateInterval = 5000; // 5 seconds 
+unsigned long accelerationPollInterval = 10; // 10 Hz
 static float maxAccelMag = 0;
 static float accelMagnitude;
 static float maxGyroMag = 0;
@@ -34,11 +36,13 @@ static int16_t curGyrZ;
 int accTreshold = 6000;
 int gyrTreshold = 200;
 const int eventMemorySize = 10;
+static int toSave = 0;
 static int16_t eventMemory[6][eventMemorySize];
 static String eventTime[eventMemorySize];
 static int memoryIndex = 0;
 static int eventCounter = 0;
 bool eventDetected = false;
+bool savingEvent = false;
 static String curTime;
 //------------------------------------------------------------------------------
 
@@ -142,8 +146,8 @@ void loop() {
     maxGyrZ = 0;
   }
 
-  // Poll acceleration and rotation speed at 10 Hz
-  if(millis() - accelTime >= 100) {
+  // Poll acceleration and rotation speed every accelerationPollInterval milliseconds
+  if(millis() - accelTime >= accelerationPollInterval) {
     accelTime = millis();
     curAccX = accel.x();
     curAccY = accel.y();
@@ -177,43 +181,59 @@ void loop() {
     eventMemory[4][memoryIndex] = curGyrY;
     eventMemory[5][memoryIndex] = curGyrZ;
 
+    // EVENT HANDLING LOGIC --------------------------------------------------------
     if(memoryIndex < eventMemorySize-1) {
       memoryIndex++;
     }
     else {
       memoryIndex = 0;
     }
-    // If acceleration or rotation speed over a certain treshold, save to the SD card
-    if((accelMagnitude > accTreshold || gyroMagnitude > gyrTreshold) && !eventDetected) {
+    // If acceleration or rotation speed over a certain treshold, save past to the SD card and keep track of the next values
+    if((accelMagnitude > accTreshold || gyroMagnitude > gyrTreshold) && !savingEvent) {
       // Save previous eventMemorySize values before the event
+      String lines = "";
       for(int i = 0; i < eventMemorySize - 1; i++) {
-        String line = eventTime[(i + memoryIndex + 1)%eventMemorySize] + "[" + String(i) + "]" +
+        lines += eventTime[(i + memoryIndex + 1)%eventMemorySize] + "[past" + String(i) + "]" +
                       String(eventMemory[0][(i + memoryIndex)%eventMemorySize]) + "," + String(eventMemory[1][(i + memoryIndex)%eventMemorySize]) + "," + 
                       String(eventMemory[2][(i + memoryIndex)%eventMemorySize]) + "," + String(eventMemory[3][(i + memoryIndex)%eventMemorySize]) + "," + 
-                      String(eventMemory[4][(i + memoryIndex)%eventMemorySize]) + "," + String(eventMemory[5][(i + memoryIndex)%eventMemorySize]);
-        if (i < eventMemorySize-1) {
-          sdWrite(line, "event.csv", true);
-        }
-        else {
-          sdWrite(line, "event.csv");
-        }
+                      String(eventMemory[4][(i + memoryIndex)%eventMemorySize]) + "," + String(eventMemory[5][(i + memoryIndex)%eventMemorySize]) + "\n";
       }
-      eventDetected = true;
+      sdWrite(lines, "event.csv");
+      Serial.println("Saving data!");
+      Serial.println(lines);
+      savingEvent = true;
       eventCounter = 0;
+      toSave = eventMemorySize;
     }
-    // Save the next eventMemorySize values after the event
-    if (eventDetected && eventCounter < eventMemorySize) {
-      String line = curTime + "," +
-                    String(curAccX) + "," + String(curAccY) + "," + String(curAccZ) + "," +
-                    String(curGyrX) + "," + String(curGyrY) + "," + String(curGyrZ);
-      sdWrite(line, "event.csv");
-      eventCounter++;
+    // If event is detected while already saving values, keep track of more values
+    else if((accelMagnitude > accTreshold || gyroMagnitude > gyrTreshold) && savingEvent) {
+      toSave += eventCounter;
     }
-    else if (eventCounter > eventMemorySize-1) {
-      eventDetected = false;
-      eventCounter = 0;
+
+    // Save every eventMemorySize values to keep track of the future after the event
+    if (savingEvent && eventCounter % eventMemorySize == 0 && eventCounter != 0) {
+      // Save previous eventMemorySize values before the event
+      String lines = "";
+      for(int i = 0; i < eventMemorySize - 1; i++) {
+        lines += eventTime[(i + memoryIndex + 1)%eventMemorySize] + "[future" + String(i) + "]" +
+                      String(eventMemory[0][(i + memoryIndex)%eventMemorySize]) + "," + String(eventMemory[1][(i + memoryIndex)%eventMemorySize]) + "," + 
+                      String(eventMemory[2][(i + memoryIndex)%eventMemorySize]) + "," + String(eventMemory[3][(i + memoryIndex)%eventMemorySize]) + "," + 
+                      String(eventMemory[4][(i + memoryIndex)%eventMemorySize]) + "," + String(eventMemory[5][(i + memoryIndex)%eventMemorySize]) + "\n";
+      }
+      sdWrite(lines, "event.csv");
+      Serial.println("Saving data!");
+      Serial.println(lines);
     }
+
+    // Keep track of how many values have been polled after the event
+    if(savingEvent && eventCounter < toSave) {
+      eventCounter += 1;
+    }
+    else if (savingEvent && eventCounter > toSave-1) {
+      savingEvent = false;
+    }
+    //------------------------------------------------------------------------------
   }
 
-  usbLoop();
+  //usbLoop();
 }
