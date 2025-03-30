@@ -8,11 +8,11 @@
 #include "sd_card.h"
 
 // Set DISABLE_CS_PIN to disable a second SPI device. Set -1 to disable this feature.
-const int8_t DISABLE_CS_PIN = -1; // pin 31 is internal SPI0 CS connected to BHI260AP
+const int8_t DISABLE_CS_PIN = -1;
 // SD SPI Chip Select pin
-const uint8_t SD_CS_PIN = 6;
+const uint8_t SD_CS_PIN = 7;
 // SD card configuration
-#define SD_CONFIG SdSpiConfig(SD_CS_PIN, SHARED_SPI, SD_SCK_MHZ(24))
+#define SD_CONFIG SdSpiConfig(SD_CS_PIN, SHARED_SPI, SD_SCK_MHZ(24)) // Max speed 48 MHz
 
 //------------------------------------------------------------------------------
 SdFs sd;

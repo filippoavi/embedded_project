@@ -1,4 +1,4 @@
-#include "Nicla_System.h"
+//#include "Nicla_System.h"
 #include "sd_card.h"
 #include "sensors.h"
 #include "rtc.h"
@@ -56,8 +56,8 @@ void initEventMemory() {
 }
 //------------------------------------------------------------------------------
 void setup() {
-  nicla::begin();
-  nicla::leds.begin();
+  /* nicla::begin();
+  nicla::leds.begin(); */
 
   Serial.begin(9600);
   // Wait for USB Serial
@@ -106,9 +106,9 @@ void setup() {
   }
 
   // Signal startup completed through green LED blink
-  nicla::leds.setColor(green);
+  /* nicla::leds.setColor(green);
   delay(3000);
-  nicla::leds.setColor(off);
+  nicla::leds.setColor(off); */
 }
 //------------------------------------------------------------------------------
 void loop() {
@@ -116,7 +116,7 @@ void loop() {
   static auto accelTime = millis();
 
   // Update function should be continuously polled
-  BHY2.update();
+  BHY2Host.update(0);
 
   // Check sensor values every sensorUpdateInterval milliseconds
   if (millis() - printTime >= sensorUpdateInterval) {

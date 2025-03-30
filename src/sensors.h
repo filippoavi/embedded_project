@@ -1,7 +1,7 @@
 #ifndef SENSORS_H
 #define SENSORS_H
 
-#include "Arduino_BHY2.h"
+#include "Arduino_BHY2Host.h"
 
 extern SensorXYZ accel;
 extern SensorXYZ gyro;

@@ -11,13 +11,13 @@ Sensor pressure(SENSOR_ID_BARO);
 SensorBSEC bsec(SENSOR_ID_BSEC);
 //------------------------------------------------------------------------------
 void sensorSetup() {
-  BHY2.begin();
-  accel.begin();        // Accelerometer
-  gyro.begin();         // Gyroscope
-  mag.begin();          // Magnetometer
-  temperature.begin();  // Temperature
-  pressure.begin();     // Pressure
-  bsec.begin();         // BME sensor readings
+  BHY2Host.begin(false, NICLA_VIA_ESLOV);
+  accel.begin(10000);        // Accelerometer
+  gyro.begin(10000);         // Gyroscope
+  mag.begin(1);          // Magnetometer
+  temperature.begin(1);  // Temperature
+  pressure.begin(1);     // Pressure
+  bsec.begin(1);         // BME sensor readings
 }
 //------------------------------------------------------------------------------
 void sensorReadSerial() {

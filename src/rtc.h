@@ -3,7 +3,6 @@
 
 #include "RTClib.h"
 #include "Arduino.h"
-#include "Arduino_BHY2.h"
 
 extern RTC_DS3231 rtc;
 
