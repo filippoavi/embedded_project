@@ -2,7 +2,7 @@
 #include "sd_card.h"
 #include "sensors.h"
 #include "rtc.h"
-//#include "usb.h"
+#include "usb.h"
 
 #define DISABLE_FS_H_WARNING  // Disable warning for type File not defined.
 
@@ -13,7 +13,7 @@ bool initializeData = true; // If true: delete and reinitialize data.csv file
 
 // Sensors ---------------------------------------------------------------------
 unsigned long sensorUpdateInterval = 5000; // 5 seconds 
-unsigned long accelerationPollInterval = 10; // 10 Hz
+unsigned long accelerationPollInterval = 100; // 10 Hz
 static float maxAccelMag = 0;
 static float accelMagnitude;
 static float maxGyroMag = 0;
@@ -35,7 +35,7 @@ static int16_t curGyrZ;
 // Event memory ----------------------------------------------------------------
 int accTreshold = 6000;
 int gyrTreshold = 200;
-const int eventMemorySize = 10;
+const int eventMemorySize = 100;
 static int toSave = 0;
 static int16_t eventMemory[6][eventMemorySize];
 static String eventTime[eventMemorySize];
@@ -116,7 +116,7 @@ void loop() {
   static auto accelTime = millis();
 
   // Update function should be continuously polled
-  BHY2Host.update(0);
+  BHY2Host.update();
 
   // Check sensor values every sensorUpdateInterval milliseconds
   if (millis() - printTime >= sensorUpdateInterval) {
@@ -182,7 +182,7 @@ void loop() {
     eventMemory[5][memoryIndex] = curGyrZ;
 
     // EVENT HANDLING LOGIC --------------------------------------------------------
-    if(memoryIndex < eventMemorySize-1) {
+    if(memoryIndex < eventMemorySize - 1) {
       memoryIndex++;
     }
     else {
@@ -192,11 +192,11 @@ void loop() {
     if((accelMagnitude > accTreshold || gyroMagnitude > gyrTreshold) && !savingEvent) {
       // Save previous eventMemorySize values before the event
       String lines = "";
-      for(int i = 0; i < eventMemorySize - 1; i++) {
-        lines += eventTime[(i + memoryIndex + 1)%eventMemorySize] + "[past" + String(i) + "]" +
+      for(int i = 0; i < eventMemorySize; i++) {
+        lines += eventTime[(i + memoryIndex)%eventMemorySize] + "[past" + String(i) + "]" +
                       String(eventMemory[0][(i + memoryIndex)%eventMemorySize]) + "," + String(eventMemory[1][(i + memoryIndex)%eventMemorySize]) + "," + 
                       String(eventMemory[2][(i + memoryIndex)%eventMemorySize]) + "," + String(eventMemory[3][(i + memoryIndex)%eventMemorySize]) + "," + 
-                      String(eventMemory[4][(i + memoryIndex)%eventMemorySize]) + "," + String(eventMemory[5][(i + memoryIndex)%eventMemorySize]) + "\n";
+                      String(eventMemory[4][(i + memoryIndex)%eventMemorySize]) + "," + String(eventMemory[5][(i + memoryIndex)%eventMemorySize]);
       }
       sdWrite(lines, "event.csv");
       Serial.println("Saving data!");
@@ -214,11 +214,12 @@ void loop() {
     if (savingEvent && eventCounter % eventMemorySize == 0 && eventCounter != 0) {
       // Save previous eventMemorySize values before the event
       String lines = "";
-      for(int i = 0; i < eventMemorySize - 1; i++) {
-        lines += eventTime[(i + memoryIndex + 1)%eventMemorySize] + "[future" + String(i) + "]" +
+      for(int i = 0; i < eventMemorySize; i++) {
+        lines += eventTime[(i + memoryIndex)%eventMemorySize] + "[future" + String(i) +
+                      " --- eventCounter=" + String (eventCounter) + " --- toSave=" + String(toSave) + "]" +
                       String(eventMemory[0][(i + memoryIndex)%eventMemorySize]) + "," + String(eventMemory[1][(i + memoryIndex)%eventMemorySize]) + "," + 
                       String(eventMemory[2][(i + memoryIndex)%eventMemorySize]) + "," + String(eventMemory[3][(i + memoryIndex)%eventMemorySize]) + "," + 
-                      String(eventMemory[4][(i + memoryIndex)%eventMemorySize]) + "," + String(eventMemory[5][(i + memoryIndex)%eventMemorySize]) + "\n";
+                      String(eventMemory[4][(i + memoryIndex)%eventMemorySize]) + "," + String(eventMemory[5][(i + memoryIndex)%eventMemorySize]);
       }
       sdWrite(lines, "event.csv");
       Serial.println("Saving data!");
@@ -229,8 +230,9 @@ void loop() {
     if(savingEvent && eventCounter < toSave) {
       eventCounter += 1;
     }
-    else if (savingEvent && eventCounter > toSave-1) {
+    else if (savingEvent && eventCounter > toSave-2) {
       savingEvent = false;
+      // We have to save what we have recorded so far, less than eventMemorySize values ... TODO
     }
     //------------------------------------------------------------------------------
   }

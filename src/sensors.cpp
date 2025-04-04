@@ -12,12 +12,12 @@ SensorBSEC bsec(SENSOR_ID_BSEC);
 //------------------------------------------------------------------------------
 void sensorSetup() {
   BHY2Host.begin(false, NICLA_VIA_ESLOV);
-  accel.begin(10000);        // Accelerometer
-  gyro.begin(10000);         // Gyroscope
-  mag.begin(1);          // Magnetometer
-  temperature.begin(1);  // Temperature
-  pressure.begin(1);     // Pressure
-  bsec.begin(1);         // BME sensor readings
+  accel.begin(10, 100);        // Accelerometer
+  gyro.begin(10, 100);         // Gyroscope
+  mag.begin(1, 100);          // Magnetometer
+  temperature.begin(1, 100);  // Temperature
+  pressure.begin(1, 100);     // Pressure
+  bsec.begin(1, 100);         // BME sensor readings
 }
 //------------------------------------------------------------------------------
 void sensorReadSerial() {
