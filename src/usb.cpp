@@ -1,13 +1,14 @@
 #include "usb.h"
 
-SDBlockDevice sd(PTE3, PTE1, PTE2, PTE4);
-USBMSD usb(&sd);
+uint64_t hz = 16000000;
+bool crc_on = false;
 
-int main() {
+SDBlockDevice sdbd(PD_8, PD_10, PD_9, PD_7, hz, crc_on);
+USBMSD usb(&sdbd);
 
-    while(true) {
+void usbLoop()
+{
+    while (true) {
         usb.process();
     }
-
-    return 0;
 }

@@ -2,6 +2,7 @@
 #define SD_CARD_H
 
 #include "SdFat.h"
+#undef F
 #include "sdios.h"
 #include "SPI.h"
 
