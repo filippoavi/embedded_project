@@ -3,7 +3,7 @@
 
 #include "spi.h"
 #include "mbed.h"
-#include "../lib/COMPONENT_SD/include/SD/SDBlockDevice.h"
+#include "COMPONENT_SD/include/SD/SDBlockDevice.h"
 //#include "lib/SDBlockDevice/SDBlockDevice.h"
 #include "USBMSD.h"
 

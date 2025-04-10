@@ -29,5 +29,10 @@
         "LSE_STARTUP_TIMEOUT=200"
       ]
     }
-  }
+  },
+  "config": {
+        "platform.cthunk-count-max": {
+            "value": 16
+        }
+    }
 }
