@@ -8,7 +8,7 @@
 #include "sd_card.h"
 
 // Set DISABLE_CS_PIN to disable a second SPI device. Set -1 to disable this feature.
-const int8_t DISABLE_CS_PIN = -1;
+const int8_t DISABLE_CS_PIN = D6;
 // SD SPI Chip Select pin
 const uint8_t SD_CS_PIN = 7;
 // SD card configuration

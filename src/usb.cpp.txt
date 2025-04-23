@@ -3,7 +3,7 @@
 uint64_t hz = 16000000;
 bool crc_on = false;
 
-SDBlockDevice sdbd(P0_27, P0_28, P0_11, P0_29, hz, crc_on);
+SDBlockDevice sdbd(PD_8, PD_10, PD_9, PD_7, hz, crc_on);
 USBMSD usb(&sdbd);
 
 void usbLoop()

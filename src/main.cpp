@@ -2,7 +2,7 @@
 #include "sd_card.h"
 #include "sensors.h"
 #include "rtc.h"
-#include "usb.h"
+//#include "usb.h"
 
 #define DISABLE_FS_H_WARNING  // Disable warning for type File not defined.
 
@@ -116,7 +116,7 @@ void loop() {
   static auto accelTime = millis();
 
   // Update function should be continuously polled
-  BHY2Host.update();
+  BHY2.update();
 
   // Check sensor values every sensorUpdateInterval milliseconds
   if (millis() - printTime >= sensorUpdateInterval) {
@@ -237,5 +237,5 @@ void loop() {
     //------------------------------------------------------------------------------
   }
 
-  usbLoop();
+  //usbLoop();
 }

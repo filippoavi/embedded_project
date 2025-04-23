@@ -9,15 +9,17 @@ Sensor temperature(SENSOR_ID_TEMP);
 Sensor gas(SENSOR_ID_GAS);
 Sensor pressure(SENSOR_ID_BARO);
 SensorBSEC bsec(SENSOR_ID_BSEC);
+const int8_t sensorCS = D6;
 //------------------------------------------------------------------------------
 void sensorSetup() {
-  BHY2Host.begin(false, NICLA_VIA_ESLOV);
-  accel.begin(10, 100);        // Accelerometer
-  gyro.begin(10, 100);         // Gyroscope
-  mag.begin(1, 100);          // Magnetometer
-  temperature.begin(1, 100);  // Temperature
-  pressure.begin(1, 100);     // Pressure
-  bsec.begin(1, 100);         // BME sensor readings
+  digitalWrite(sensorCS, LOW);
+  BHY2.begin();
+  accel.begin();        // Accelerometer
+  gyro.begin();         // Gyroscope
+  mag.begin();          // Magnetometer
+  temperature.begin();  // Temperature
+  pressure.begin();     // Pressure
+  bsec.begin();         // BME sensor readings
 }
 //------------------------------------------------------------------------------
 void sensorReadSerial() {

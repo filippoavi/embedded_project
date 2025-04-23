@@ -1,7 +1,18 @@
 #ifndef SENSORS_H
 #define SENSORS_H
 
-#include "Arduino_BHY2Host.h"
+//1
+/* #define SPI_PSELMOSI0 SPI_MOSI
+#define SPI_PSELMISO0 SPI_MISO
+#define SPI_PSELSCK0 SPI_SCK
+#define CS_FLASH D6 */
+//3
+/* #define P0_10 D5
+#define p24 D4
+#define PIN_ESLOV_INT D3
+#define INT_BHI260 D6 */
+
+#include "Arduino_BHY2.h"
 
 extern SensorXYZ accel;
 extern SensorXYZ gyro;
