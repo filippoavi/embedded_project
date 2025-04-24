@@ -1,4 +1,5 @@
-#include "common.h"
+//#include "../lib/BHI2xy_SensorAPI/examples/common/common.h"
+#include "BHI_example.h"
 #include "bhy2_parse.h"
 #include <stdio.h>
 
