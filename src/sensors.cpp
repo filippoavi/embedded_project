@@ -10,9 +10,7 @@
 #define Y_AXIS 1
 #define Z_AXIS 2
 
-#define wait_us(us) _wait_us_inline(us)
-
-arduino::MbedSPI spi(SPI_MOSI, SPI_MISO, SPI_SCK /*, SPI_PSELSS0 */);
+SPI spi(SPI_MOSI, SPI_MISO, SPI_SCK /*, SPI_PSELSS0 */);
 
 //------------------------------------------------------------------------------
 /* SensorXYZ accel(SENSOR_ID_ACC);
@@ -24,21 +22,21 @@ Sensor gas(SENSOR_ID_GAS);
 Sensor pressure(SENSOR_ID_BARO);
 SensorBSEC bsec(SENSOR_ID_BSEC); */
 const int8_t sensorCS = D6;
-float dataBuffer[3][6]; // 3 axis, 6 sensors
+static float dataBuffer[3][6]; // 3 axis, 6 sensors
 //------------------------------------------------------------------------------
 // SPI communication functions
 void setup_interfaces(bool reset_power, enum bhy2_intf intf)
 {
-    spi.begin();
+    spi.frequency(1600000); // Set SPI frequency to 16 MHz
+    spi.format(16, 3);
 }
 int8_t bhy2_spi_read(uint8_t reg_addr, uint8_t *reg_data, uint32_t length, void *intf_ptr)
 {
     (void)intf_ptr;
 
     digitalWrite(sensorCS, LOW);
-    spi.transfer(reg_addr);
-    spi.transfer(NULL, (uint16_t)length);
-    spi.transfer((char*)reg_data, (uint16_t)length);
+    spi.write(reg_addr);
+    spi.write(NULL, (uint16_t)length, (char*)reg_data, (uint16_t)length);
     digitalWrite(sensorCS, HIGH);
 
     return BHY2_INTF_RET_SUCCESS;
@@ -48,9 +46,8 @@ int8_t bhy2_spi_write(uint8_t reg_addr, const uint8_t *reg_data, uint32_t length
 {
     (void)intf_ptr;
     digitalWrite(sensorCS, LOW);
-    spi.transfer(reg_addr);
-    spi.transfer((char*)reg_data, (uint16_t)length);
-    spi.transfer(NULL, 0);
+    spi.write(reg_addr);
+    spi.write((char*)reg_data, (uint16_t)length, NULL, 0);
     digitalWrite(sensorCS, HIGH);
 
     return BHY2_INTF_RET_SUCCESS;
@@ -58,7 +55,7 @@ int8_t bhy2_spi_write(uint8_t reg_addr, const uint8_t *reg_data, uint32_t length
 void bhy2_delay_us(uint32_t us, void *private_data)
 {
     (void)private_data;
-    wait_us(us);
+    delayMicroseconds(us);
 }
 const char* get_api_error(int8_t error_code)
 {
@@ -130,47 +127,7 @@ void sensorSetup(struct bhy2_dev &bhy2_device) {
   printf("Sensori inizializzati. Lettura dei dati...\n");
 }
 //------------------------------------------------------------------------------
-void sensorReadSerial() {
-  // Standalone Accelerometer values
-/*   Serial.print("acc_X:");
-  Serial.print(accel.x());
-  Serial.print(",");
-  Serial.print("acc_Y:");
-  Serial.print(accel.y());
-  Serial.print(",");
-  Serial.print("acc_Z:");
-  Serial.print(accel.z());
-  Serial.print(",");
-  // Standalone Gyroscope values
-  Serial.print("gyro_X:");
-  Serial.print(gyro.x());
-  Serial.print(",");
-  Serial.print("gyro_Y:");
-  Serial.print(gyro.y());
-  Serial.print(",");
-  Serial.print("gyro_Z:");
-  Serial.print(gyro.z());
-  Serial.print(",");
-  // Standalone Magnetometer values
-  Serial.print("mag_X:");
-  Serial.print(mag.x());
-  Serial.print(",");
-  Serial.print("mag_Y:");
-  Serial.print(mag.y());
-  Serial.print(",");
-  Serial.print("mag_Z:");
-  Serial.print(mag.z());
-  Serial.print(",");
-  // Standalone Temeprature values
-  Serial.print(String("Temperature:") + String(temperature.value()) + String(","));
-  // Standalone Pressure values
-  Serial.print(String("Pressure:") + String(pressure.value()) + String(","));
-  // Standalone BME sensor redings
-  Serial.print(String("VOC:") + String(bsec.b_voc_eq()) + String(","));
-  Serial.print(String("CO2:") + String(bsec.co2_eq()) + String(","));
-  Serial.println(String("Humidity:") + String(bsec.comp_h())); */
-}
-//------------------------------------------------------------------------------
+
 // Define a macro function to generate functions to read sensor values to String
 #define SENSOR_READ_FUNC(name, sensor, axis) \
 String name() { \
@@ -297,4 +254,34 @@ int8_t sensorUpdate(struct bhy2_dev &bhy2_device) {
             printf("Errore FIFO: %s\n", get_api_error(result));
         }
   return result;
+}
+void dataBufferPrint() {
+  for (int i = 0; i < 3; i++) {
+    for (int j = 0; j < 6; j++) {
+      Serial.print("i: " + String(i) + " - j: " + String(j) + " - ");
+      Serial.print(dataBuffer[i][j]);
+      Serial.print(" ");
+    }
+    Serial.println();
+  }
+}
+void spiTest() {
+    uint8_t reg_addr = 0x2B; // Example adderss to read from
+    uint8_t reg_data[1]; // Buffer to store the read data
+    uint32_t length = 1; // Number of bytes to read
+
+    int8_t result = bhy2_get_regs(reg_addr, reg_data, length, NULL);
+    if (result != BHY2_OK) {
+        Serial.print("Error reading register: ");
+        Serial.println(get_api_error(result));
+        return;
+    }
+
+    // Prints the read data
+    Serial.print("Read data from register 0x");
+    Serial.print(reg_addr, HEX);
+    Serial.print(": 0x");
+    Serial.println(reg_data[0], HEX);
+    
+    //int8_t result = bhy2_spi_read(reg_addr, reg_data, length, NULL);
 }

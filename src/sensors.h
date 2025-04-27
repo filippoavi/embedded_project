@@ -4,8 +4,9 @@
 
 ////////////////////////////
 
-#include <Arduino.h>
-#include "SPI.h"
+#include "Arduino.h"
+//#include "SPI.h"
+#include "mbed.h"
 #include "objects.h"
 #include <stdbool.h>
 #include "bhy2.h"
@@ -13,9 +14,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
-#include "bhy2_parse.h"
-
-#include "mbed_wait_api.h"
+#include "bhy2_parse.h" 
 
 #include "bhy2_klio.h"
 #include "bhy2_swim.h"
@@ -36,18 +35,9 @@
 
 //#include "Arduino_BHY2.h"
 
-/* extern SensorXYZ accel;
-extern SensorXYZ gyro;
-extern SensorXYZ mag;
-extern SensorQuaternion rotation;
-extern Sensor temperature;
-extern Sensor gas;
-extern Sensor pressure;
-extern SensorBSEC bsec; */
-extern float dataBuffer[3][6]; // Buffer to store sensor data, 6 sensors, 200 characters
+using namespace mbed;
 
 void sensorSetup(struct bhy2_dev &bhy2_device);
-void sensorReadSerial();
 
 String sensorReadAccX();
 String sensorReadAccY();
@@ -81,5 +71,7 @@ float sensorGetHumidity();
 
 void sensor_data_callback(const struct bhy2_fifo_parse_data_info *info, void *private_data);
 int8_t sensorUpdate(struct bhy2_dev &bhy2_device);
+void dataBufferPrint();
+void spiTest();
 
 #endif // SENSORS_H

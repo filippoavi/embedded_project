@@ -116,15 +116,21 @@ void setup() {
 void loop() {
   static auto printTime = millis();
   static auto accelTime = millis();
+  static auto dataTime = millis();
 
   // Update function should be continuously polled
   //BHY2.update();
   sensorUpdate(bhy2_device);
 
+  if (millis() - dataTime >= 1000) {
+    dataTime = millis();
+    dataBufferPrint();
+    spiTest();
+  }
+
   // Check sensor values every sensorUpdateInterval milliseconds
   if (millis() - printTime >= sensorUpdateInterval) {
     printTime = millis();
-    //sensorReadSerial();
 
     // Write sensor data to SD card
     String line = rtcReadTime() + "," +
