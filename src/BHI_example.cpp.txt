@@ -1,0 +1,104 @@
+//#include "../lib/BHI2xy_SensorAPI/examples/common/common.h"
+#include "BHI_example.h"
+#include "bhy2_parse.h"
+#include <stdio.h>
+
+// Callback per la gestione dei dati FIFO del sensore
+void sensor_data_callback(const struct bhy2_fifo_parse_data_info *info, void *private_data)
+{
+    const uint8_t *data = info->data_ptr;
+
+    switch (info->sensor_id)
+    {
+        case BHY2_SENSOR_ID_ACC: // Accelerometro
+        {
+            struct bhy2_data_xyz accel;
+            bhy2_parse_xyz(data, &accel);
+            printf("Accelerazione (m/s^2): X=%.3f, Y=%.3f, Z=%.3f\n",
+                   accel.x / 4096.0f, accel.y / 4096.0f, accel.z / 4096.0f);
+            break;
+        }
+        case BHY2_SENSOR_ID_GYRO: // Giroscopio
+        {
+            struct bhy2_data_xyz gyro;
+            bhy2_parse_xyz(data, &gyro);
+            printf("Giroscopio (deg/s): X=%.3f, Y=%.3f, Z=%.3f\n",
+                   gyro.x * 2000.0f / 32768.0f, gyro.y * 2000.0f / 32768.0f, gyro.z * 2000.0f / 32768.0f);
+            break;
+        }
+        case BHY2_SENSOR_ID_MAG: // Magnetometro
+        {
+            struct bhy2_data_xyz mag;
+            bhy2_parse_xyz(data, &mag);
+            printf("Campo magnetico (uT): X=%.3f, Y=%.3f, Z=%.3f\n",
+                   mag.x * 2500.0f / 32768.0f, mag.y * 2500.0f / 32768.0f, mag.z * 2500.0f / 32768.0f);
+            break;
+        }
+        case BHY2_SENSOR_ID_TEMP: // Temperatura
+        {
+            float temperature;
+            bhy2_parse_temperature_celsius(data, &temperature);
+            printf("Temperatura (°C): %.2f\n", temperature);
+            break;
+        }
+        case BHY2_SENSOR_ID_HUM: // Umidità
+        {
+            float humidity;
+            bhy2_parse_humidity(data, &humidity);
+            printf("Umidità relativa (%%): %.2f\n", humidity);
+            break;
+        }
+        case BHY2_SENSOR_ID_BARO: // Pressione atmosferica
+        {
+            float pressure;
+            bhy2_parse_pressure(data, &pressure);
+            printf("Pressione atmosferica (Pa): %.2f\n", pressure);
+            break;
+        }
+        default:
+            break;
+    }
+}
+
+int main(void)
+{
+    struct bhy2_dev bhy2_device;
+    int8_t result;
+
+    // Configurazione dell'interfaccia hardware SPI
+    setup_interfaces(true, BHY2_SPI_INTERFACE);
+
+    // Inizializzazione del dispositivo BHY2
+    result = bhy2_init(BHY2_SPI_INTERFACE, bhy2_spi_read, bhy2_spi_write, bhy2_delay_us, BHY2_RD_WR_LEN, NULL, &bhy2_device);
+    if (result != BHY2_OK)
+    {
+        printf("Errore durante l'inizializzazione: %s\n", get_api_error(result));
+        return -1;
+    }
+
+    // Registrazione delle callback per i sensori
+    bhy2_register_fifo_parse_callback(BHY2_SENSOR_ID_ACC, sensor_data_callback, NULL, &bhy2_device);
+    bhy2_register_fifo_parse_callback(BHY2_SENSOR_ID_GYRO, sensor_data_callback, NULL, &bhy2_device);
+    bhy2_register_fifo_parse_callback(BHY2_SENSOR_ID_MAG, sensor_data_callback, NULL, &bhy2_device);
+    bhy2_register_fifo_parse_callback(BHY2_SENSOR_ID_TEMP, sensor_data_callback, NULL, &bhy2_device);
+    bhy2_register_fifo_parse_callback(BHY2_SENSOR_ID_HUM, sensor_data_callback, NULL, &bhy2_device);
+    bhy2_register_fifo_parse_callback(BHY2_SENSOR_ID_BARO, sensor_data_callback, NULL, &bhy2_device);
+
+    printf("Sensori inizializzati. Lettura dei dati...\n");
+
+    // Loop principale per elaborare i dati FIFO
+    while (1)
+    {
+        result = bhy2_get_and_process_fifo(NULL, 0, &bhy2_device);
+        if (result != BHY2_OK)
+        {
+            printf("Errore FIFO: %s\n", get_api_error(result));
+        }
+
+        //bhy2_device.table[BHY2_SENSOR_ID_ACC].callback;
+    }
+
+    // Chiudi l'interfaccia SPI
+    close_interfaces(BHY2_SPI_INTERFACE);
+    return 0;
+}

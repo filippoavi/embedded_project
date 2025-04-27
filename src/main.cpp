@@ -12,6 +12,8 @@ bool initializeData = true; // If true: delete and reinitialize data.csv file
 //------------------------------------------------------------------------------
 
 // Sensors ---------------------------------------------------------------------
+struct bhy2_dev bhy2_device;
+
 unsigned long sensorUpdateInterval = 5000; // 5 seconds 
 unsigned long accelerationPollInterval = 100; // 10 Hz
 static float maxAccelMag = 0;
@@ -66,7 +68,7 @@ void setup() {
   }
 
   // Initialize sensors, SD card and RTC
-  sensorSetup();
+  sensorSetup(bhy2_device);
   sdSetup();
   rtcSetup();
 
@@ -116,7 +118,8 @@ void loop() {
   static auto accelTime = millis();
 
   // Update function should be continuously polled
-  BHY2.update();
+  //BHY2.update();
+  sensorUpdate(bhy2_device);
 
   // Check sensor values every sensorUpdateInterval milliseconds
   if (millis() - printTime >= sensorUpdateInterval) {
@@ -129,7 +132,7 @@ void loop() {
                   String(maxGyrX) + "," + String(maxGyrY) + "," + String(maxGyrZ) + "," +
                   sensorReadMagX() + "," + sensorReadMagY() + "," + sensorReadMagZ() + "," +
                   sensorReadTemperature() + "," + sensorReadPressure() + "," +
-                  sensorReadVOC() + "," + sensorReadCO2() + "," + sensorReadHumidity();
+                  /*sensorReadVOC() + "," + sensorReadCO2() + "," + */sensorReadHumidity();
     sdWrite(line, "data.csv");
     // So typically a line of the CSV takes more or less 80-100 bytes of memory
     // 1 reading every 5 seconds for 60 days is 100-150 megabytes
@@ -149,12 +152,12 @@ void loop() {
   // Poll acceleration and rotation speed every accelerationPollInterval milliseconds
   if(millis() - accelTime >= accelerationPollInterval) {
     accelTime = millis();
-    curAccX = accel.x();
-    curAccY = accel.y();
-    curAccZ = accel.z();
-    curGyrX = gyro.x();
-    curGyrY = gyro.y();
-    curGyrZ = gyro.z();
+    curAccX = sensorGetAccX();
+    curAccY = sensorGetAccY();
+    curAccZ = sensorGetAccZ();
+    curGyrX = sensorGetGyroX();
+    curGyrY = sensorGetGyroY();
+    curGyrZ = sensorGetGyroZ();
     curTime = rtcReadTime();
     accelMagnitude = sqrt(curAccX * curAccX + curAccY * curAccY + curAccZ * curAccZ);
     gyroMagnitude = sqrt(curGyrX * curGyrX + curGyrY * curGyrY + curGyrZ * curGyrZ);
