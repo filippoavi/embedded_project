@@ -12,8 +12,6 @@ bool initializeData = true; // If true: delete and reinitialize data.csv file
 //------------------------------------------------------------------------------
 
 // Sensors ---------------------------------------------------------------------
-struct bhy2_dev bhy2_device;
-
 unsigned long sensorUpdateInterval = 5000; // 5 seconds 
 unsigned long accelerationPollInterval = 100; // 10 Hz
 static float maxAccelMag = 0;
@@ -68,7 +66,7 @@ void setup() {
   }
 
   // Initialize sensors, SD card and RTC
-  sensorSetup(bhy2_device);
+  sensorSetup();
   sdSetup();
   rtcSetup();
 
@@ -120,7 +118,7 @@ void loop() {
 
   // Update function should be continuously polled
   //BHY2.update();
-  sensorUpdate(bhy2_device);
+  sensorUpdate();
 
   if (millis() - dataTime >= 1000) {
     dataTime = millis();
