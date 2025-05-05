@@ -7,7 +7,7 @@
 //#include "BLEHandler.h"
 
 #include "../lib/BHI2xy_SensorAPI/bhy2.h"
-#include "../lib/BHI2xy_SensorAPI/bhy2.h"
+#include "common.h"
 #include "SensorTypes.h"
 
 #if BHY2_ENABLE_BLE_BATCH

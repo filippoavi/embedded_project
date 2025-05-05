@@ -69,7 +69,7 @@ bool BoschSensortec::begin()
   }
 
   bhy2_update_virtual_sensor_list(&_bhy2);
-  bhy2_get_virt_sensor_list(_sensorsPresent, &_bhy2);
+  bhy2_get_virt_sensor_list(&_bhy2);
 
   printSensors();
 

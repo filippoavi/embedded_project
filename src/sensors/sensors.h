@@ -1,26 +1,6 @@
 #ifndef SENSORS_H
 #define SENSORS_H
 
-#define BHY2_RD_WR_LEN 256  // MCU maximum read write length
-#define SENSOR_DATA_FIXED_LENGTH (10)
-#define SENSOR_LONG_DATA_FIXED_LENGTH (21)
-#define ACCELEROMETER_ID 0
-#define GYROSCOPE_ID 1
-#define MAGNETOMETER_ID 2
-#define TEMPERATURE_ID 3
-#define HUMIDITY_ID 4
-#define PRESSURE_ID 5
-#define X_AXIS 0
-#define Y_AXIS 1
-#define Z_AXIS 2
-#define WORK_BUFFER_SIZE  2048
-
-const uint8_t BLE_SENSOR_EVT_BATCH_CNT_MAX = (244 / (SENSOR_DATA_FIXED_LENGTH + 2))/10*10;
-#define SENSOR_QUEUE_SIZE   (BLE_SENSOR_EVT_BATCH_CNT_MAX + 20)
-#define LONG_SENSOR_QUEUE_SIZE 4
-
-//------------------------------------------------------------------------------
-
 #include "Arduino.h"
 //#include "SPI.h"
 #include "mbed.h"
@@ -40,12 +20,45 @@ const uint8_t BLE_SENSOR_EVT_BATCH_CNT_MAX = (244 / (SENSOR_DATA_FIXED_LENGTH + 
 
 #include "SensorManager.h"
 #include "SensorClass.h"
+#include "Sensor.h"
+#include "SensorXYZ.h"
+#include "SensorBSEC.h"
+#include "common.h"
+
+//------------------------------------------------------------------------------
+
+#define BHY2_RD_WR_LEN 256  // MCU maximum read write length
+#define SENSOR_DATA_FIXED_LENGTH (10)
+#define SENSOR_LONG_DATA_FIXED_LENGTH (21)
+/* #define ACCELEROMETER_ID 0
+#define GYROSCOPE_ID 1
+#define MAGNETOMETER_ID 2
+#define TEMPERATURE_ID 3
+#define HUMIDITY_ID 4
+#define PRESSURE_ID 5
+#define X_AXIS 0
+#define Y_AXIS 1
+#define Z_AXIS 2 */
+#define WORK_BUFFER_SIZE  2048
+
+const uint8_t BLE_SENSOR_EVT_BATCH_CNT_MAX = (244 / (SENSOR_DATA_FIXED_LENGTH + 2))/10*10;
+//#define SENSOR_QUEUE_SIZE   (BLE_SENSOR_EVT_BATCH_CNT_MAX + 20)
+#define LONG_SENSOR_QUEUE_SIZE 4
 
 using namespace mbed;
 
-mbed::CircularBuffer<SensorDataPacket, SENSOR_QUEUE_SIZE, uint8_t> _sensorQueue;
-mbed::CircularBuffer<SensorLongDataPacket, LONG_SENSOR_QUEUE_SIZE, uint8_t> _longSensorQueue;
-uint8_t _sensorsPresent[32];
+extern mbed::CircularBuffer<SensorDataPacket, SENSOR_QUEUE_SIZE, uint8_t> _sensorQueue;
+extern mbed::CircularBuffer<SensorLongDataPacket, LONG_SENSOR_QUEUE_SIZE, uint8_t> _longSensorQueue;
+extern uint8_t _sensorsPresent[32];
+
+//------------------------------------------------------------------------------
+
+/* SensorXYZ accel_s(SENSOR_ID_ACC);
+SensorXYZ gyro_s(SENSOR_ID_GYRO);
+SensorXYZ mag_s(SENSOR_ID_MAG);
+Sensor temperature_s(SENSOR_ID_TEMP);
+Sensor pressure_s(SENSOR_ID_BARO);
+SensorBSEC bsec_s(SENSOR_ID_BSEC); */
 
 //------------------------------------------------------------------------------
 
@@ -94,6 +107,6 @@ void dataBufferPrint();
 void spiTest();
 void printSensors();
 
-struct bhy2_dev _bhy2;
+extern struct bhy2_dev _bhy2;
 
 #endif // SENSORS_H

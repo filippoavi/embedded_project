@@ -1,6 +1,6 @@
 //#include "Nicla_System.h"
 #include "sd_card.h"
-#include "sensors.h"
+#include "sensors/sensors.h"
 #include "rtc.h"
 //#include "usb.h"
 

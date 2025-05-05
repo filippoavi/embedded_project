@@ -6,86 +6,20 @@
 #include "SensorTypes.h"
 
 //------------------------------------------------------------------------------
-SPI spi(SPI_MOSI, SPI_MISO, SPI_SCK /*, SPI_PSELSS0 */);
+//SPI sensors_spi(SPI_MOSI, SPI_MISO, SPI_SCK /*, SPI_PSELSS0 */);
 enum bhy2_intf intf;
 const int8_t sensorCS = D6;
 static float dataBuffer[3][6]; // 3 axis, 6 sensors
-//------------------------------------------------------------------------------
+struct bhy2_dev _bhy2;
+CircularBuffer<SensorDataPacket, SENSOR_QUEUE_SIZE, uint8_t> _sensorQueue;
+CircularBuffer<SensorLongDataPacket, LONG_SENSOR_QUEUE_SIZE, uint8_t> _longSensorQueue;
 
-// SPI initialization and communication functions
-void setup_interfaces(bool reset_power, enum bhy2_intf intf)
-{
-    spi.frequency(1600000); // SPI frequency 16 MHz
-    spi.format(16, 3);
-}
-int8_t bhy2_spi_read(uint8_t reg_addr, uint8_t *reg_data, uint32_t length, void *intf_ptr)
-{
-    (void)intf_ptr;
-
-    digitalWrite(sensorCS, LOW);
-    spi.write(reg_addr);
-    spi.write(NULL, (uint16_t)length, (char*)reg_data, (uint16_t)length);
-    digitalWrite(sensorCS, HIGH);
-
-    return BHY2_INTF_RET_SUCCESS;
-}
-
-int8_t bhy2_spi_write(uint8_t reg_addr, const uint8_t *reg_data, uint32_t length, void *intf_ptr)
-{
-    (void)intf_ptr;
-    digitalWrite(sensorCS, LOW);
-    spi.write(reg_addr);
-    spi.write((char*)reg_data, (uint16_t)length, NULL, 0);
-    digitalWrite(sensorCS, HIGH);
-
-    return BHY2_INTF_RET_SUCCESS;
-}
-void bhy2_delay_us(uint32_t us, void *private_data)
-{
-    (void)private_data;
-    delayMicroseconds(us);
-}
-const char* get_api_error(int8_t error_code)
-{
-    const char *ret = " ";
-
-    switch (error_code)
-    {
-        case BHY2_OK:
-            break;
-        case BHY2_E_NULL_PTR:
-            ret = "[API Error] Null pointer";
-            break;
-        case BHY2_E_INVALID_PARAM:
-            ret = "[API Error] Invalid parameter";
-            break;
-        case BHY2_E_IO:
-            ret = "[API Error] IO error";
-            break;
-        case BHY2_E_MAGIC:
-            ret = "[API Error] Invalid firmware";
-            break;
-        case BHY2_E_TIMEOUT:
-            ret = "[API Error] Timed out";
-            break;
-        case BHY2_E_BUFFER:
-            ret = "[API Error] Invalid buffer";
-            break;
-        case BHY2_E_INVALID_FIFO_TYPE:
-            ret = "[API Error] Invalid FIFO type";
-            break;
-        case BHY2_E_INVALID_EVENT_SIZE:
-            ret = "[API Error] Invalid Event size";
-            break;
-        case BHY2_E_PARAM_NOT_SET:
-            ret = "[API Error] Parameter not set";
-            break;
-        default:
-            ret = "[API Error] Unknown API error code";
-    }
-
-    return ret;
-}
+SensorXYZ accel_s(SENSOR_ID_ACC);
+SensorXYZ gyro_s(SENSOR_ID_GYRO);
+SensorXYZ mag_s(SENSOR_ID_MAG);
+Sensor temperature_s(SENSOR_ID_TEMP);
+Sensor pressure_s(SENSOR_ID_BARO);
+SensorBSEC bsec_s(SENSOR_ID_BSEC);
 //------------------------------------------------------------------------------
 void sensorSetup() {
 // BHY2 definitions
@@ -139,9 +73,11 @@ void sensorSetup() {
 	Serial.println("BHY2 device booted.");
 
 	// Register system callbacks
+  Serial.print("Registering system callbacks... ");
 	bhy2_register_fifo_parse_callback(BHY2_SYS_ID_META_EVENT, parseMetaEvent, NULL, &_bhy2);
   bhy2_register_fifo_parse_callback(BHY2_SYS_ID_META_EVENT_WU, parseMetaEvent, NULL, &_bhy2);
   bhy2_register_fifo_parse_callback(BHY2_SYS_ID_DEBUG_MSG, parseDebugMessage, NULL, &_bhy2);
+  Serial.println("System callbacks registered.");
 
   ret = bhy2_get_and_process_fifo(_workBuffer, WORK_BUFFER_SIZE, &_bhy2);
 	Serial.println(get_api_error(ret));
@@ -168,55 +104,58 @@ void sensorSetup() {
   // Sensors begin
   //configure(100.0, 0);
 
-  // To be repeated for each sensor
-  SensorConfigurationPacket& config = SensorConfigurationPacket::getSensorConfiguration(ACCELEROMETER_ID);
-
-  auto ret = bhy2_set_virt_sensor_cfg(config.sensorId, config.sampleRate, config.latency, &_bhy2);
-
+  // Sensor configuration for each sensor
+  accel_s.begin(100, 0);
+  gyro_s.begin(100, 0);
+  mag_s.begin(10, 0);
+  temperature_s.begin(10, 0);
+  pressure_s.begin(10, 0);
+  bsec_s.begin(10, 0);
+  
 }
 //------------------------------------------------------------------------------
 
 // Define a macro function to generate functions to read sensor values to String
-#define SENSOR_READ_FUNC(name, sensor, axis) \
+#define SENSOR_READ_FUNC(name, sens, axis) \
 String name() { \
-  return String(dataBuffer[axis][sensor]); \
+  return String(sens.axis()); \
 }
-// Functions to read sensor values
-SENSOR_READ_FUNC(sensorReadAccX, ACCELEROMETER_ID, X_AXIS);
-SENSOR_READ_FUNC(sensorReadAccY, ACCELEROMETER_ID, Y_AXIS);
-SENSOR_READ_FUNC(sensorReadAccZ, ACCELEROMETER_ID, Z_AXIS);
-SENSOR_READ_FUNC(sensorReadGyroX, GYROSCOPE_ID, X_AXIS);
-SENSOR_READ_FUNC(sensorReadGyroY, GYROSCOPE_ID, Y_AXIS);
-SENSOR_READ_FUNC(sensorReadGyroZ, GYROSCOPE_ID, Z_AXIS);
-SENSOR_READ_FUNC(sensorReadMagX, MAGNETOMETER_ID, X_AXIS);
-SENSOR_READ_FUNC(sensorReadMagY, MAGNETOMETER_ID, Y_AXIS);
-SENSOR_READ_FUNC(sensorReadMagZ, MAGNETOMETER_ID, Z_AXIS);
-SENSOR_READ_FUNC(sensorReadTemperature, TEMPERATURE_ID, 0);
-SENSOR_READ_FUNC(sensorReadPressure, PRESSURE_ID, 0);
-//SENSOR_READ_FUNC(sensorReadVOC, bsec, b_voc_eq);
-//SENSOR_READ_FUNC(sensorReadCO2, bsec, co2_eq);
-SENSOR_READ_FUNC(sensorReadHumidity, HUMIDITY_ID, 0);
+// Functions to read sensor values as String
+SENSOR_READ_FUNC(sensorReadAccX, accel_s, x);
+SENSOR_READ_FUNC(sensorReadAccY, accel_s, y);
+SENSOR_READ_FUNC(sensorReadAccZ, accel_s, z);
+SENSOR_READ_FUNC(sensorReadGyroX, gyro_s, x);
+SENSOR_READ_FUNC(sensorReadGyroY, gyro_s, y);
+SENSOR_READ_FUNC(sensorReadGyroZ, gyro_s, z);
+SENSOR_READ_FUNC(sensorReadMagX, mag_s, x);
+SENSOR_READ_FUNC(sensorReadMagY, mag_s, y);
+SENSOR_READ_FUNC(sensorReadMagZ, mag_s, z);
+SENSOR_READ_FUNC(sensorReadTemperature, temperature_s, value);
+SENSOR_READ_FUNC(sensorReadPressure, pressure_s, value);
+SENSOR_READ_FUNC(sensorReadVOC, bsec_s, b_voc_eq);
+SENSOR_READ_FUNC(sensorReadCO2, bsec_s, co2_eq);
+SENSOR_READ_FUNC(sensorReadHumidity, bsec_s, comp_h);
 //----------------------------------------------------------------------------
 // Define a macro function to generate functions to get sensor values
-#define SENSOR_GET_FUNC(name, sensor, axis) \
+#define SENSOR_GET_FUNC(name, sens, axis) \
 float name() { \
-  return dataBuffer[axis][sensor]; \
+  return float(sens.axis()); \
 }
-// Functions to read sensor values
-SENSOR_GET_FUNC(sensorGetAccX, ACCELEROMETER_ID, X_AXIS);
-SENSOR_GET_FUNC(sensorGetAccY, ACCELEROMETER_ID, Y_AXIS);
-SENSOR_GET_FUNC(sensorGetAccZ, ACCELEROMETER_ID, Z_AXIS);
-SENSOR_GET_FUNC(sensorGetGyroX, GYROSCOPE_ID, X_AXIS);
-SENSOR_GET_FUNC(sensorGetGyroY, GYROSCOPE_ID, Y_AXIS);
-SENSOR_GET_FUNC(sensorGetGyroZ, GYROSCOPE_ID, Z_AXIS);
-SENSOR_GET_FUNC(sensorGetMagX, MAGNETOMETER_ID, X_AXIS);
-SENSOR_GET_FUNC(sensorGetMagY, MAGNETOMETER_ID, Y_AXIS);
-SENSOR_GET_FUNC(sensorGetMagZ, MAGNETOMETER_ID, Z_AXIS);
-SENSOR_GET_FUNC(sensorGetTemperature, TEMPERATURE_ID, 0);
-SENSOR_GET_FUNC(sensorGetPressure, PRESSURE_ID, 0);
-//SENSOR_GET_FUNC(sensorGetVOC, bsec, b_voc_eq);
-//SENSOR_GET_FUNC(sensorGetCO2, bsec, co2_eq);
-SENSOR_GET_FUNC(sensorGetHumidity, HUMIDITY_ID, 0);
+// Functions to get sensor values as float
+SENSOR_GET_FUNC(sensorGetAccX, accel_s, x);
+SENSOR_GET_FUNC(sensorGetAccY, accel_s, y);
+SENSOR_GET_FUNC(sensorGetAccZ, accel_s, z);
+SENSOR_GET_FUNC(sensorGetGyroX, gyro_s, x);
+SENSOR_GET_FUNC(sensorGetGyroY, gyro_s, y);
+SENSOR_GET_FUNC(sensorGetGyroZ, gyro_s, z);
+SENSOR_GET_FUNC(sensorGetMagX, mag_s, x);
+SENSOR_GET_FUNC(sensorGetMagY, mag_s, y);
+SENSOR_GET_FUNC(sensorGetMagZ, mag_s, z);
+SENSOR_GET_FUNC(sensorGetTemperature, temperature_s, value);
+SENSOR_GET_FUNC(sensorGetPressure, pressure_s, value);
+SENSOR_GET_FUNC(sensorGetVOC, bsec_s, b_voc_eq);
+SENSOR_GET_FUNC(sensorGetCO2, bsec_s, co2_eq);
+SENSOR_GET_FUNC(sensorGetHumidity, bsec_s, comp_h);
 //----------------------------------------------------------------------------
 // Callback per la gestione dei dati FIFO del sensore
 void sensor_data_callback(const struct bhy2_fifo_parse_data_info *info, void *private_data)
@@ -295,6 +234,8 @@ void sensor_data_callback(const struct bhy2_fifo_parse_data_info *info, void *pr
 //----------------------------------------------------------------------------
 // Function to read the FIFOs and parse the data in the BMI260AP
 int8_t sensorUpdate() {
+  // Probabily add update from Nicla!!!
+  
   int8_t result = BHY2_OK;
   result = bhy2_get_and_process_fifo(NULL, 0, &_bhy2);
         if (result != BHY2_OK)

@@ -2,7 +2,7 @@
 #define SENSOR_CLASS_H_
 
 #include "Sensor_ID.h"
-//#include "DataParser.h"
+#include "DataParser.h"
 #include "BoschSensortec.h"
 
 class SensorClass {
