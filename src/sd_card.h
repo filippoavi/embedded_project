@@ -5,6 +5,7 @@
 #undef F
 #include "sdios.h"
 #include "SPI.h"
+#include "defines.h"
 
 extern SdFs sd;
 extern SdFile myFile;
@@ -14,6 +15,7 @@ extern scr_t scr;
 extern uint8_t cmd6Data[64];
 extern uint32_t eraseSize;
 extern uint32_t ocr;
+
 
 void sdSetup();
 void sdCheck();

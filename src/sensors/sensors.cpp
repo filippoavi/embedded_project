@@ -8,8 +8,7 @@
 //------------------------------------------------------------------------------
 //SPI sensors_spi(SPI_MOSI, SPI_MISO, SPI_SCK /*, SPI_PSELSS0 */);
 enum bhy2_intf intf;
-const int8_t sensorCS = D6;
-static float dataBuffer[3][6]; // 3 axis, 6 sensors
+//static float dataBuffer[3][6]; // 3 axis, 6 sensors
 struct bhy2_dev _bhy2;
 CircularBuffer<SensorDataPacket, SENSOR_QUEUE_SIZE, uint8_t> _sensorQueue;
 CircularBuffer<SensorLongDataPacket, LONG_SENSOR_QUEUE_SIZE, uint8_t> _longSensorQueue;
@@ -74,15 +73,15 @@ void sensorSetup() {
 
 	// Register system callbacks
   Serial.print("Registering system callbacks... ");
-	bhy2_register_fifo_parse_callback(BHY2_SYS_ID_META_EVENT, parseMetaEvent, NULL, &_bhy2);
-  bhy2_register_fifo_parse_callback(BHY2_SYS_ID_META_EVENT_WU, parseMetaEvent, NULL, &_bhy2);
-  bhy2_register_fifo_parse_callback(BHY2_SYS_ID_DEBUG_MSG, parseDebugMessage, NULL, &_bhy2);
+	bhy2_register_fifo_parse_callback(BHY2_SYS_ID_META_EVENT, BoschParser::parseMetaEvent, NULL, &_bhy2);
+  bhy2_register_fifo_parse_callback(BHY2_SYS_ID_META_EVENT_WU, BoschParser::parseMetaEvent, NULL, &_bhy2);
+  bhy2_register_fifo_parse_callback(BHY2_SYS_ID_DEBUG_MSG, BoschParser::parseDebugMessage, NULL, &_bhy2);
   Serial.println("System callbacks registered.");
 
-  ret = bhy2_get_and_process_fifo(_workBuffer, WORK_BUFFER_SIZE, &_bhy2);
-	Serial.println(get_api_error(ret));
+  /* ret = bhy2_get_and_process_fifo(_workBuffer, WORK_BUFFER_SIZE, &_bhy2); // EXECUTION STOPS HERE!!!
+	Serial.println(get_api_error(ret)); */
 
-	// Register sensor callbacks --- DA QUI RIVEDERE!!!
+	// Register sensor callbacks
   // All sensors' data are handled in the same generic way
   Serial.print("Registering sensor callbacks... ");
   for (uint8_t i = 1; i < BHY2_SENSOR_ID_MAX; i++) {
@@ -92,18 +91,7 @@ void sensorSetup() {
   bhy2_update_virtual_sensor_list(&_bhy2);
   bhy2_get_virt_sensor_list(&_bhy2);
   Serial.println("Sensor callbacks registered.");
-
-/*   // FROM HERE DIFFERENT - Sensor callback initialization
-  bhy2_register_fifo_parse_callback(BHY2_SENSOR_ID_ACC, sensor_data_callback, NULL, &_bhy2);
-  bhy2_register_fifo_parse_callback(BHY2_SENSOR_ID_GYRO, sensor_data_callback, NULL, &_bhy2);
-  bhy2_register_fifo_parse_callback(BHY2_SENSOR_ID_MAG, sensor_data_callback, NULL, &_bhy2);
-  bhy2_register_fifo_parse_callback(BHY2_SENSOR_ID_TEMP, sensor_data_callback, NULL, &_bhy2);
-  bhy2_register_fifo_parse_callback(BHY2_SENSOR_ID_HUM, sensor_data_callback, NULL, &_bhy2);
-  bhy2_register_fifo_parse_callback(BHY2_SENSOR_ID_BARO, sensor_data_callback, NULL, &_bhy2); */
   
-  // Sensors begin
-  //configure(100.0, 0);
-
   // Sensor configuration for each sensor
   accel_s.begin(100, 0);
   gyro_s.begin(100, 0);
@@ -157,94 +145,20 @@ SENSOR_GET_FUNC(sensorGetVOC, bsec_s, b_voc_eq);
 SENSOR_GET_FUNC(sensorGetCO2, bsec_s, co2_eq);
 SENSOR_GET_FUNC(sensorGetHumidity, bsec_s, comp_h);
 //----------------------------------------------------------------------------
-// Callback per la gestione dei dati FIFO del sensore
-void sensor_data_callback(const struct bhy2_fifo_parse_data_info *info, void *private_data)
-{
-    const uint8_t *data = info->data_ptr;
-
-    switch (info->sensor_id)
-    {
-        case BHY2_SENSOR_ID_ACC: // Accelerometro
-        {
-            struct bhy2_data_xyz accel;
-            bhy2_parse_xyz(data, &accel);
-            printf("Accelerazione (m/s^2): X=%.3f, Y=%.3f, Z=%.3f\n",
-                   accel.x / 4096.0f, accel.y / 4096.0f, accel.z / 4096.0f);
-            // Save the data in the buffer
-            dataBuffer[0][0] = accel.x / 4096.0f; // X
-            dataBuffer[1][0] = accel.y / 4096.0f; // Y
-            dataBuffer[2][0] = accel.z / 4096.0f; // Z
-            break;
-        }
-        case BHY2_SENSOR_ID_GYRO: // Giroscopio
-        {
-            struct bhy2_data_xyz gyro;
-            bhy2_parse_xyz(data, &gyro);
-            printf("Giroscopio (deg/s): X=%.3f, Y=%.3f, Z=%.3f\n",
-                   gyro.x * 2000.0f / 32768.0f, gyro.y * 2000.0f / 32768.0f, gyro.z * 2000.0f / 32768.0f);
-            // Save the data in the buffer
-            dataBuffer[0][1] = gyro.x * 2000.0f / 32768.0f; // X
-            dataBuffer[1][1] = gyro.y * 2000.0f / 32768.0f; // Y
-            dataBuffer[2][1] = gyro.z * 2000.0f / 32768.0f; // Z
-            break;
-        }
-        case BHY2_SENSOR_ID_MAG: // Magnetometro
-        {
-            struct bhy2_data_xyz mag;
-            bhy2_parse_xyz(data, &mag);
-            printf("Campo magnetico (uT): X=%.3f, Y=%.3f, Z=%.3f\n",
-                   mag.x * 2500.0f / 32768.0f, mag.y * 2500.0f / 32768.0f, mag.z * 2500.0f / 32768.0f);
-            // Save the data in the buffer
-            dataBuffer[0][2] = mag.x * 2500.0f / 32768.0f; // X
-            dataBuffer[1][2] = mag.y * 2500.0f / 32768.0f; // Y
-            dataBuffer[2][2] = mag.z * 2500.0f / 32768.0f; // Z
-            break;
-        }
-        case BHY2_SENSOR_ID_TEMP: // Temperatura
-        {
-            float temperature;
-            bhy2_parse_temperature_celsius(data, &temperature);
-            printf("Temperatura (°C): %.2f\n", temperature);
-            // Save the data in the buffer
-            dataBuffer[0][3] = temperature; // Temperature
-            break;
-        }
-        case BHY2_SENSOR_ID_HUM: // Umidità
-        {
-            float humidity;
-            bhy2_parse_humidity(data, &humidity);
-            printf("Umidità relativa (%%): %.2f\n", humidity);
-            // Save the data in the buffer
-            dataBuffer[0][4] = humidity; // Humidity
-            break;
-        }
-        case BHY2_SENSOR_ID_BARO: // Pressione atmosferica
-        {
-            float pressure;
-            bhy2_parse_pressure(data, &pressure);
-            printf("Pressione atmosferica (Pa): %.2f\n", pressure);
-            // Save the data in the buffer
-            dataBuffer[0][5] = pressure; // Pressure
-            break;
-        }
-        default:
-            break;
-    }
-}
-//----------------------------------------------------------------------------
 // Function to read the FIFOs and parse the data in the BMI260AP
 int8_t sensorUpdate() {
-  // Probabily add update from Nicla!!!
-  
-  int8_t result = BHY2_OK;
+  // Probabily add update from Nicla!!! PROBLEM HERE!!!
+  sensortec.update();
+
+  /* int8_t result = BHY2_OK;
   result = bhy2_get_and_process_fifo(NULL, 0, &_bhy2);
         if (result != BHY2_OK)
         {
             printf("Errore FIFO: %s\n", get_api_error(result));
         }
-  return result;
+  return result; */
 }
-void dataBufferPrint() {
+/* void dataBufferPrint() {
   for (int i = 0; i < 3; i++) {
     for (int j = 0; j < 6; j++) {
       Serial.print("i: " + String(i) + " - j: " + String(j) + " - ");
@@ -253,8 +167,13 @@ void dataBufferPrint() {
     }
     Serial.println();
   }
-}
+} */
 void spiTest() {
+    // Set SD chip select pin high
+    digitalWrite(SD_CS_PIN, HIGH);
+    // Set sensor chip select pin low
+    digitalWrite(sensorCS, LOW);
+    
     uint8_t reg_addr = 0X2B; // Example adderss to read from
     uint8_t reg_data[1]; // Buffer to store the read data
     uint32_t length = 1; // Number of bytes to read
@@ -271,149 +190,10 @@ void spiTest() {
     Serial.print(": 0x");
     Serial.println(reg_data[0]);
     
-    //int8_t result = bhy2_spi_read(reg_addr, reg_data, length, NULL);
-}
-//----------------------------------------------------------------------------
-void parseMetaEvent(const struct bhy2_fifo_parse_data_info *callback_info, void *callback_ref)
-{
-  uint8_t meta_event_type = callback_info->data_ptr[0];
-  uint8_t byte1 = callback_info->data_ptr[1];
-  uint8_t byte2 = callback_info->data_ptr[2];
-  uint32_t s, ns;
-  const char *event_text;
-
-  if (callback_info->sensor_id == BHY2_SYS_ID_META_EVENT)
-  {
-    event_text = "[META EVENT]";
-  }
-  else if (callback_info->sensor_id == BHY2_SYS_ID_META_EVENT_WU)
-  {
-    event_text = "[META EVENT WAKE UP]";
-  }
-  else
-  {
-    return;
-  }
-
-  convertTime(*callback_info->time_stamp, &s, &ns);
-
-  struct parse_ref *parse_table = (struct parse_ref*)callback_ref;
-  (void)parse_table;
-  switch (meta_event_type)
-  {
-    case BHY2_META_EVENT_FLUSH_COMPLETE:
-      //printf("%s; T: %u.%09u; Flush complete for sensor id %u\r\n", event_text, s, ns,byte1);
-      Serial.print(event_text);
-      Serial.print(" Flush complete for sensor id ");
-      Serial.println(byte1);
-      break;
-    case BHY2_META_EVENT_SAMPLE_RATE_CHANGED:
-      //printf("%s; T: %u.%09u; Sample rate changed for sensor id %u\r\n", event_text, s,ns, byte1);
-      Serial.print(event_text);
-      Serial.print(" Sample rate changed for sensor id ");
-      Serial.println(byte1);
-      break;
-    case BHY2_META_EVENT_POWER_MODE_CHANGED:
-      //printf("%s; T: %u.%09u; Power mode changed for sensor id %u\r\n", event_text, s,ns, byte1);
-      Serial.print(event_text);
-      Serial.print(" Power mode changed for sensor id ");
-      Serial.println(byte1);
-      break;
-    case BHY2_META_EVENT_ALGORITHM_EVENTS:
-      //printf("%s; T: %u.%09u; Algorithm event\r\n", event_text, s, ns);
-      Serial.print(event_text);
-      Serial.println(" Algorithm event");
-      break;
-    case BHY2_META_EVENT_SENSOR_STATUS:
-      //printf("%s; T: %u.%09u; Accuracy for sensor id %u changed to %u\r\n", event_text,s, ns, byte1, byte2);
-      Serial.print(event_text);
-      Serial.print(" Accuracy for sensor id ");
-      Serial.print(byte1);
-      Serial.print(" changed to ");
-      Serial.println(byte2);
-      break;
-    case BHY2_META_EVENT_BSX_DO_STEPS_MAIN:
-      //printf("%s; T: %u.%09u; BSX event (do steps main)\r\n", event_text, s, ns);
-      Serial.print(event_text);
-      Serial.println(" Algorithm event");
-      break;
-    case BHY2_META_EVENT_BSX_DO_STEPS_CALIB:
-      //printf("%s; T: %u.%09u; BSX event (do steps calib)\r\n", event_text, s, ns);
-      Serial.print(event_text);
-      Serial.println(" BSX event (do steps calib)");
-      break;
-    case BHY2_META_EVENT_BSX_GET_OUTPUT_SIGNAL:
-      //printf("%s; T: %u.%09u; BSX event (get output signal)\r\n", event_text, s, ns);
-      Serial.print(event_text);
-      Serial.println(" BSX event (get output signal)");
-      break;
-    case BHY2_META_EVENT_SENSOR_ERROR:
-      //printf("%s; T: %u.%09u; Sensor id %u reported error 0x%02X\r\n", event_text, s, ns,byte1, byte2);
-      Serial.print(event_text);
-      Serial.print(" Sensor id ");
-      Serial.print(byte1);
-      Serial.print(" reported error 0x ");
-      Serial.println(byte2, HEX);
-      break;
-    case BHY2_META_EVENT_FIFO_OVERFLOW:
-      //printf("%s; T: %u.%09u; FIFO overflow\r\n", event_text, s, ns);
-      Serial.print(event_text);
-      Serial.println(" FIFO overflow");
-      break;
-    case BHY2_META_EVENT_DYNAMIC_RANGE_CHANGED:
-      //printf("%s; T: %u.%09u; Dynamic range changed for sensor id %u\r\n", event_text, s,ns, byte1);
-      Serial.print(event_text);
-      Serial.print(" Dynamic range changed for sensor id ");
-      Serial.println(byte1);
-      break;
-    case BHY2_META_EVENT_FIFO_WATERMARK:
-      //printf("%s; T: %u.%09u; FIFO watermark reached\r\n", event_text, s, ns);
-      Serial.print(event_text);
-      Serial.println(" FIFO watermark reached");
-      break;
-    case BHY2_META_EVENT_INITIALIZED:
-      //printf("%s; T: %u.%09u; Firmware initialized. Firmware version %u\r\n", event_text,s, ns,
-            //((uint16_t )byte2 << 8) | byte1);
-      Serial.print(event_text);
-      Serial.print(" Firmware initialized. Firmware version ");
-      Serial.println(((uint16_t )byte2 << 8) | byte1);
-      break;
-    case BHY2_META_TRANSFER_CAUSE:
-      //printf("%s; T: %u.%09u; Transfer cause for sensor id %u\r\n", event_text, s, ns,byte1);
-      Serial.print(event_text);
-      Serial.print(" Transfer cause for sensor id ");
-      Serial.println(byte1);
-      break;
-    case BHY2_META_EVENT_SENSOR_FRAMEWORK:
-      //printf("%s; T: %u.%09u; Sensor framework event for sensor id %u\r\n", event_text,s, ns, byte1);
-      Serial.print(event_text);
-      Serial.print(" Sensor framework event for sensor id ");
-      Serial.println(byte1);
-      break;
-    case BHY2_META_EVENT_RESET:
-      //printf("%s; T: %u.%09u; Reset event\r\n", event_text, s, ns);
-      Serial.print(event_text);
-      Serial.println(" Reset event");
-      break;
-    case BHY2_META_EVENT_SPACER:
-      break;
-    default:
-      //printf("%s; T: %u.%09u; Unknown meta event with id: %u\r\n", event_text, s, ns,meta_event_type);
-      Serial.print(event_text);
-      Serial.print(" Unknown meta event with id: ");
-      Serial.println(meta_event_type);
-      break;
-  }
-}
-//----------------------------------------------------------------------------
-void parseDebugMessage(const struct bhy2_fifo_parse_data_info *callback_info, void *callback_ref)
-{
-  uint32_t s, ns;
-  convertTime(*callback_info->time_stamp, &s, &ns);
-    Serial.print("[DEBUG MSG]; flag: 0x");
-    Serial.print(callback_info->data_ptr[0]);
-    Serial.print(" data: ");
-    Serial.println((char*)&callback_info->data_ptr[1]);
+    // Set sensor chip select pin high
+    digitalWrite(sensorCS, HIGH);
+    // Set SD chip select pin low
+    digitalWrite(SD_CS_PIN, LOW);
 }
 //----------------------------------------------------------------------------
 void convertTime(uint64_t time_ticks, uint32_t *s, uint32_t *ns)
@@ -426,7 +206,6 @@ void convertTime(uint64_t time_ticks, uint32_t *s, uint32_t *ns)
 }
 //----------------------------------------------------------------------------
 // Function to parse the data from the FIFO buffer and add it to the queue
-// BISOGNA MODIFICARE IN MODO DA METTERE DATI IN dataBuffer!!!
 void parseData(const struct bhy2_fifo_parse_data_info *fifoData, void *arg)
 {
   int8_t sz;

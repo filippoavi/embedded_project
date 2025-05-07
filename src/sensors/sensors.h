@@ -1,8 +1,9 @@
 #ifndef SENSORS_H
 #define SENSORS_H
 
+#include "defines.h"
+
 #include "Arduino.h"
-//#include "SPI.h"
 #include "mbed.h"
 #include "objects.h"
 #include <stdbool.h>
@@ -24,22 +25,14 @@
 #include "SensorXYZ.h"
 #include "SensorBSEC.h"
 #include "common.h"
+#include "BoschParser.h"
 
 //------------------------------------------------------------------------------
 
 #define BHY2_RD_WR_LEN 256  // MCU maximum read write length
 #define SENSOR_DATA_FIXED_LENGTH (10)
 #define SENSOR_LONG_DATA_FIXED_LENGTH (21)
-/* #define ACCELEROMETER_ID 0
-#define GYROSCOPE_ID 1
-#define MAGNETOMETER_ID 2
-#define TEMPERATURE_ID 3
-#define HUMIDITY_ID 4
-#define PRESSURE_ID 5
-#define X_AXIS 0
-#define Y_AXIS 1
-#define Z_AXIS 2 */
-#define WORK_BUFFER_SIZE  2048
+//#define WORK_BUFFER_SIZE 1024
 
 const uint8_t BLE_SENSOR_EVT_BATCH_CNT_MAX = (244 / (SENSOR_DATA_FIXED_LENGTH + 2))/10*10;
 //#define SENSOR_QUEUE_SIZE   (BLE_SENSOR_EVT_BATCH_CNT_MAX + 20)
@@ -95,15 +88,15 @@ float sensorGetVOC();
 float sensorGetCO2();
 float sensorGetHumidity();
 
-void parseMetaEvent(const struct bhy2_fifo_parse_data_info *callback_info, void *callback_ref);
-void parseDebugMessage(const struct bhy2_fifo_parse_data_info *callback_info, void *callback_ref);
+//void parseMetaEvent(const struct bhy2_fifo_parse_data_info *callback_info, void *callback_ref);
+//void parseDebugMessage(const struct bhy2_fifo_parse_data_info *callback_info, void *callback_ref);
 void parseData(const struct bhy2_fifo_parse_data_info *fifoData, void *arg);
 
 void sensor_data_callback(const struct bhy2_fifo_parse_data_info *info, void *private_data);
 void convertTime(uint64_t time_ticks, uint32_t *s, uint32_t *ns);
 void addSensorData(SensorDataPacket &sensorData);
 void addLongSensorData(SensorLongDataPacket &sensorData);
-void dataBufferPrint();
+//void dataBufferPrint();
 void spiTest();
 void printSensors();
 

@@ -56,9 +56,6 @@ void initEventMemory() {
 }
 //------------------------------------------------------------------------------
 void setup() {
-  /* nicla::begin();
-  nicla::leds.begin(); */
-
   Serial.begin(9600);
   // Wait for USB Serial
   while (!Serial) {
@@ -104,11 +101,6 @@ void setup() {
     myFile.close();
     Serial.println("done.");
   }
-
-  // Signal startup completed through green LED blink
-  /* nicla::leds.setColor(green);
-  delay(3000);
-  nicla::leds.setColor(off); */
 }
 //------------------------------------------------------------------------------
 void loop() {
@@ -117,12 +109,10 @@ void loop() {
   static auto dataTime = millis();
 
   // Update function should be continuously polled
-  //BHY2.update();
   sensorUpdate();
 
   if (millis() - dataTime >= 1000) {
     dataTime = millis();
-    dataBufferPrint();
     spiTest();
   }
 

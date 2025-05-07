@@ -1,7 +1,7 @@
 #ifndef SENSOR_XYZ_H_
 #define SENSOR_XYZ_H_
 
-//#include "SensorClass.h"
+#include "SensorClass.h"
 #include "DataParser.h"
 
 class SensorXYZ : public SensorClass {

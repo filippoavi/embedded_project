@@ -9,8 +9,7 @@
 
 // Set DISABLE_CS_PIN to disable a second SPI device. Set -1 to disable this feature.
 const int8_t DISABLE_CS_PIN = D6;
-// SD SPI Chip Select pin
-const uint8_t SD_CS_PIN = D7;
+
 // SD card configuration
 
 #define SD_CONFIG SdSpiConfig(SD_CS_PIN, SHARED_SPI, SD_SCK_MHZ(4)) // Max speed 48 MHz
