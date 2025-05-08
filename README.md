@@ -1,8 +1,8 @@
-This is the repository for the final project of the Embedded System course.
+This is the repository for the final project of the Embedded Systems course.
 
 In order to compile the code, it is necessary to install the PlatformIO extension in Visual Studio Code (https://platformio.org).
 
-Relevant librtaries used:
+Relevant libraries used:
   * https://github.com/adafruit/RTClib
   * https://github.com/greiman/SdFat
   * https://github.com/arduino-libraries/ArduinoBLE
