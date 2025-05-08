@@ -78,8 +78,8 @@ void sensorSetup() {
   bhy2_register_fifo_parse_callback(BHY2_SYS_ID_DEBUG_MSG, BoschParser::parseDebugMessage, NULL, &_bhy2);
   Serial.println("System callbacks registered.");
 
-  /* ret = bhy2_get_and_process_fifo(_workBuffer, WORK_BUFFER_SIZE, &_bhy2); // EXECUTION STOPS HERE!!!
-	Serial.println(get_api_error(ret)); */
+  ret = bhy2_get_and_process_fifo(_workBuffer, WORK_BUFFER_SIZE, &_bhy2); // EXECUTION STOPS HERE!!!
+	Serial.println(get_api_error(ret));
 
 	// Register sensor callbacks
   // All sensors' data are handled in the same generic way
@@ -147,31 +147,12 @@ SENSOR_GET_FUNC(sensorGetHumidity, bsec_s, comp_h);
 //----------------------------------------------------------------------------
 // Function to read the FIFOs and parse the data in the BMI260AP
 int8_t sensorUpdate() {
-  // Probabily add update from Nicla!!! PROBLEM HERE!!!
+  // This is not working properly!!! Probably because of bhy2_get_and_process_fifo()?
   sensortec.update();
-
-  /* int8_t result = BHY2_OK;
-  result = bhy2_get_and_process_fifo(NULL, 0, &_bhy2);
-        if (result != BHY2_OK)
-        {
-            printf("Errore FIFO: %s\n", get_api_error(result));
-        }
-  return result; */
 }
-/* void dataBufferPrint() {
-  for (int i = 0; i < 3; i++) {
-    for (int j = 0; j < 6; j++) {
-      Serial.print("i: " + String(i) + " - j: " + String(j) + " - ");
-      Serial.print(dataBuffer[i][j]);
-      Serial.print(" ");
-    }
-    Serial.println();
-  }
-} */
 void spiTest() {
-    // Set SD chip select pin high
+    // SPI enable comm
     digitalWrite(SD_CS_PIN, HIGH);
-    // Set sensor chip select pin low
     digitalWrite(sensorCS, LOW);
     
     uint8_t reg_addr = 0X2B; // Example adderss to read from
@@ -190,17 +171,16 @@ void spiTest() {
     Serial.print(": 0x");
     Serial.println(reg_data[0]);
     
-    // Set sensor chip select pin high
+    // SPI disable comm
     digitalWrite(sensorCS, HIGH);
-    // Set SD chip select pin low
     digitalWrite(SD_CS_PIN, LOW);
 }
 //----------------------------------------------------------------------------
 void convertTime(uint64_t time_ticks, uint32_t *s, uint32_t *ns)
 {
-    uint64_t timestamp = time_ticks; /* Store the last timestamp */
+    uint64_t timestamp = time_ticks; // Store the last timestamp
 
-    timestamp = timestamp * 15625; /* timestamp is now in nanoseconds */
+    timestamp = timestamp * 15625; // timestamp is now in nanoseconds
     *s = (uint32_t)(timestamp / UINT64_C(1000000000));
     *ns = (uint32_t)(timestamp - ((*s) * UINT64_C(1000000000)));
 }

@@ -46,15 +46,6 @@ extern uint8_t _sensorsPresent[32];
 
 //------------------------------------------------------------------------------
 
-/* SensorXYZ accel_s(SENSOR_ID_ACC);
-SensorXYZ gyro_s(SENSOR_ID_GYRO);
-SensorXYZ mag_s(SENSOR_ID_MAG);
-Sensor temperature_s(SENSOR_ID_TEMP);
-Sensor pressure_s(SENSOR_ID_BARO);
-SensorBSEC bsec_s(SENSOR_ID_BSEC); */
-
-//------------------------------------------------------------------------------
-
 void sensorSetup();
 int8_t sensorUpdate();
 
