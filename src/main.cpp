@@ -1,5 +1,5 @@
 #include "sd_card.h"
-#include "sensors/sensors.h"
+#include "sensor_manager.h"
 #include "rtc.h"
 //#include "usb.h"
 
@@ -112,7 +112,6 @@ void loop() {
 
   if (millis() - dataTime >= 1000) {
     dataTime = millis();
-    spiTest();
   }
 
   // Check sensor values every sensorUpdateInterval milliseconds
