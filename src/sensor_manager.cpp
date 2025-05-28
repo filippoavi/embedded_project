@@ -15,13 +15,13 @@ Sensor pressure(SENSOR_ID_BARO);
 SensorBSEC bsec(SENSOR_ID_BSEC);
 //------------------------------------------------------------------------------
 void sensorSetup() {
-  BHY2.begin();
+  BHY2.begin(NICLA_STANDALONE);
   accel.begin();        // Accelerometer
   gyro.begin();         // Gyroscope
   mag.begin();          // Magnetometer
   temperature.begin();  // Temperature
   pressure.begin();     // Pressure
-  bsec.begin();     // BSEC (Gas) Sensor
+  bsec.begin();         // BSEC (Gas) Sensor
 }
 //------------------------------------------------------------------------------
 

@@ -50,9 +50,9 @@
 #define BHI260_SHUTTLE_ID 0x119
 
 //mbed::DigitalOut BHY260_CS_PIN(SPI_PSELSS0, 1);
-mbed::DigitalOut BHY260_CS_PIN((digitalPinToPinName(D6)), 1);
+mbed::DigitalOut BHY260_CS_PIN(digitalPinToPinName(D6), 1);
 //mbed::DigitalIn BHY260_INT_PIN(INT_BHI260);
-mbed::DigitalIn BHY260_INT_PIN(SPI_MISO);
+mbed::DigitalIn BHY260_INT_PIN(digitalPinToPinName(D10));
 
 
 bool get_interrupt_status(void)
@@ -103,7 +103,7 @@ const char* get_api_error(int8_t error_code)
 }
 
 //mbed::SPI spi(SPI_PSELMOSI0, SPI_PSELMISO0, SPI_PSELSCK0 /*, SPI_PSELSS0 */);
-mbed::SPI spi(SPI_MOSI, SPI_MISO, SPI_SCK  /*, SPI_PSELSS0 */);
+mbed::SPI spi(digitalPinToPinName(D8), digitalPinToPinName(D10), digitalPinToPinName(D9)  /*, SPI_PSELSS0 */);
 
 void setup_interfaces(bool reset_power, enum bhy2_intf intf)
 {
