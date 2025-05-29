@@ -1,3 +1,4 @@
+#include <Arduino.h>
 #include "sd_card.h"
 #include "sensor_manager.h"
 #include "rtc.h"
@@ -34,7 +35,7 @@ static int16_t curGyrZ;
 // Event memory ----------------------------------------------------------------
 int accTreshold = 6000;
 int gyrTreshold = 200;
-const int eventMemorySize = 100;
+const int eventMemorySize = 3;
 static int toSave = 0;
 static int16_t eventMemory[6][eventMemorySize];
 static String eventTime[eventMemorySize];
