@@ -30,12 +30,13 @@ static int16_t maxGyrZ = 0;
 static int16_t curGyrX;
 static int16_t curGyrY;
 static int16_t curGyrZ;
+bool useEvents = true; // Toggle events usage
 //------------------------------------------------------------------------------
 
 // Event memory ----------------------------------------------------------------
 int accTreshold = 6000;
 int gyrTreshold = 200;
-const int eventMemorySize = 3;
+const int eventMemorySize = 10;
 static int toSave = 0;
 static int16_t eventMemory[6][eventMemorySize];
 static String eventTime[eventMemorySize];
@@ -106,14 +107,9 @@ void setup() {
 void loop() {
   static auto printTime = millis();
   static auto accelTime = millis();
-  static auto dataTime = millis();
 
   // Update function should be continuously polled
   sensorUpdate();
-
-  if (millis() - dataTime >= 1000) {
-    dataTime = millis();
-  }
 
   // Check sensor values every sensorUpdateInterval milliseconds
   if (millis() - printTime >= sensorUpdateInterval) {
@@ -126,7 +122,10 @@ void loop() {
                   sensorReadMagX() + "," + sensorReadMagY() + "," + sensorReadMagZ() + "," +
                   sensorReadTemperature() + "," + sensorReadPressure() + "," +
                   /*sensorReadVOC() + "," + sensorReadCO2() + "," + */sensorReadHumidity();
+    
+    digitalWrite(sensorCS, HIGH);
     sdWrite(line, "data.csv");
+    digitalWrite(sensorCS, LOW);
     // So typically a line of the CSV takes more or less 80-100 bytes of memory
     // 1 reading every 5 seconds for 60 days is 100-150 megabytes
     Serial.println(line);
@@ -185,7 +184,7 @@ void loop() {
       memoryIndex = 0;
     }
     // If acceleration or rotation speed over a certain treshold, save past to the SD card and keep track of the next values
-    if((accelMagnitude > accTreshold || gyroMagnitude > gyrTreshold) && !savingEvent) {
+    if(useEvents && (accelMagnitude > accTreshold || gyroMagnitude > gyrTreshold) && !savingEvent) {
       // Save previous eventMemorySize values before the event
       String lines = "";
       for(int i = 0; i < eventMemorySize; i++) {
@@ -194,7 +193,9 @@ void loop() {
                       String(eventMemory[2][(i + memoryIndex)%eventMemorySize]) + "," + String(eventMemory[3][(i + memoryIndex)%eventMemorySize]) + "," + 
                       String(eventMemory[4][(i + memoryIndex)%eventMemorySize]) + "," + String(eventMemory[5][(i + memoryIndex)%eventMemorySize]);
       }
+      digitalWrite(sensorCS, HIGH);
       sdWrite(lines, "event.csv");
+      digitalWrite(sensorCS, LOW);
       Serial.println("Saving data!");
       Serial.println(lines);
       savingEvent = true;
@@ -202,12 +203,12 @@ void loop() {
       toSave = eventMemorySize;
     }
     // If event is detected while already saving values, keep track of more values
-    else if((accelMagnitude > accTreshold || gyroMagnitude > gyrTreshold) && savingEvent) {
+    else if(useEvents && (accelMagnitude > accTreshold || gyroMagnitude > gyrTreshold) && savingEvent) {
       toSave += eventCounter;
     }
 
     // Save every eventMemorySize values to keep track of the future after the event
-    if (savingEvent && eventCounter % eventMemorySize == 0 && eventCounter != 0) {
+    if (useEvents && savingEvent && eventCounter % eventMemorySize == 0 && eventCounter != 0) {
       // Save previous eventMemorySize values before the event
       String lines = "";
       for(int i = 0; i < eventMemorySize; i++) {
@@ -217,16 +218,18 @@ void loop() {
                       String(eventMemory[2][(i + memoryIndex)%eventMemorySize]) + "," + String(eventMemory[3][(i + memoryIndex)%eventMemorySize]) + "," + 
                       String(eventMemory[4][(i + memoryIndex)%eventMemorySize]) + "," + String(eventMemory[5][(i + memoryIndex)%eventMemorySize]);
       }
+      digitalWrite(sensorCS, HIGH);
       sdWrite(lines, "event.csv");
+      digitalWrite(sensorCS, LOW);
       Serial.println("Saving data!");
       Serial.println(lines);
     }
 
     // Keep track of how many values have been polled after the event
-    if(savingEvent && eventCounter < toSave) {
+    if(useEvents && savingEvent && eventCounter < toSave) {
       eventCounter += 1;
     }
-    else if (savingEvent && eventCounter > toSave-2) {
+    else if (useEvents && savingEvent && eventCounter > toSave-2) {
       savingEvent = false;
       // We have to save what we have recorded so far, less than eventMemorySize values ... TODO
     }
