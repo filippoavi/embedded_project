@@ -10,6 +10,7 @@
 extern SDBlockDevice sdbd;
 extern USBMSD usb;
 
+void usbSetup();
 void usbLoop();
 
 #endif // USB_H

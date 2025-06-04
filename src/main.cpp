@@ -2,7 +2,7 @@
 #include "sd_card.h"
 #include "sensor_manager.h"
 #include "rtc.h"
-//#include "usb.h"
+#include "usb.h"
 
 #define DISABLE_FS_H_WARNING  // Disable warning for type File not defined.
 
@@ -63,10 +63,11 @@ void setup() {
     yield();
   }
 
-  // Initialize sensors, SD card and RTC
+  // Initialize sensors, SD card, RTC and USB
   sensorSetup();
   sdSetup();
   rtcSetup();
+  usbSetup();
 
   // Initialize event memory to 0
   initEventMemory();
@@ -236,5 +237,5 @@ void loop() {
     //------------------------------------------------------------------------------
   }
 
-  //usbLoop();
+  usbLoop();
 }
