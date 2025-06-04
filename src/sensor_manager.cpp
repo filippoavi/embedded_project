@@ -8,22 +8,24 @@
 SensorXYZ accel(SENSOR_ID_ACC);
 SensorXYZ gyro(SENSOR_ID_GYRO);
 SensorXYZ mag(SENSOR_ID_MAG);
-SensorQuaternion rotation(SENSOR_ID_RV);
+//SensorQuaternion rotation(SENSOR_ID_RV);
 Sensor temperature(SENSOR_ID_TEMP);
-Sensor gas(SENSOR_ID_GAS);
+//Sensor gas(SENSOR_ID_GAS);
 Sensor pressure(SENSOR_ID_BARO);
 SensorBSEC bsec(SENSOR_ID_BSEC);
 //------------------------------------------------------------------------------
 void sensorSetup() {
-  delay(2000);
+  delay(1000); // Ensure all sensors are ready
   BHY2.begin(NICLA_STANDALONE);
   accel.begin(1000, 0);        // Accelerometer
   gyro.begin(1000, 0);         // Gyroscope
   mag.begin(1000, 0);          // Magnetometer
   temperature.begin(1000, 0);  // Temperature
+  //gas.begin(1000,0);
   pressure.begin(1000, 0);     // Pressure
   bsec.begin(1000, 0);         // BSEC (Gas) Sensor
-  digitalWrite(sensorCS, LOW);
+  //digitalWrite(sensorCS, LOW);
+  delay(1000);
 }
 //------------------------------------------------------------------------------
 

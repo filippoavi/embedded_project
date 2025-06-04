@@ -195,6 +195,7 @@ void sdSetup() {
   digitalWrite(sensorCS, HIGH);
   cout << F("SdFat version: ") << SD_FAT_VERSION_STR << endl;
   printConfig(SD_CONFIG);
+  //delay(2000); // Debug delay, lower/remove in final build
   uint32_t t = millis();
   if (!sd.cardBegin(SD_CONFIG)) {
     cout << F(

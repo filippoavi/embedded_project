@@ -13,23 +13,23 @@ bool initializeData = true; // If true: delete and reinitialize data.csv file
 
 // Sensors ---------------------------------------------------------------------
 unsigned long sensorUpdateInterval = 5000; // 5 seconds 
-unsigned long accelerationPollInterval = 100; // 10 Hz
+unsigned long accelerationPollInterval = 10; // 100 Hz
 static float maxAccelMag = 0;
 static float accelMagnitude;
 static float maxGyroMag = 0;
 static float gyroMagnitude;
-static int16_t maxAccX = 0;
-static int16_t maxAccY = 0;
-static int16_t maxAccZ = 0;
-static int16_t curAccX;
-static int16_t curAccY;
-static int16_t curAccZ;
-static int16_t maxGyrX = 0;
-static int16_t maxGyrY = 0;
-static int16_t maxGyrZ = 0;
-static int16_t curGyrX;
-static int16_t curGyrY;
-static int16_t curGyrZ;
+static float maxAccX = 0;
+static float maxAccY = 0;
+static float maxAccZ = 0;
+static float curAccX;
+static float curAccY;
+static float curAccZ;
+static float maxGyrX = 0;
+static float maxGyrY = 0;
+static float maxGyrZ = 0;
+static float curGyrX;
+static float curGyrY;
+static float curGyrZ;
 bool useEvents = true; // Toggle events usage
 //------------------------------------------------------------------------------
 
@@ -45,6 +45,7 @@ static int eventCounter = 0;
 bool eventDetected = false;
 bool savingEvent = false;
 static String curTime;
+static String saveBuffer = "";
 //------------------------------------------------------------------------------
 
 //------------------------------------------------------------------------------
@@ -63,9 +64,16 @@ void setup() {
     yield();
   }
 
+  // Disable all SPI devices before initialization
+  pinMode(sensorCS, OUTPUT);
+  digitalWrite(sensorCS, HIGH);
+  pinMode(SD_CS_PIN, OUTPUT);
+  digitalWrite(SD_CS_PIN, HIGH);
+  delay(500);
+
   // Initialize sensors, SD card and RTC
-  sensorSetup();
   sdSetup();
+  sensorSetup();
   rtcSetup();
 
   // Initialize event memory to 0
@@ -105,15 +113,15 @@ void setup() {
 }
 //------------------------------------------------------------------------------
 void loop() {
-  static auto printTime = millis();
+  static auto readTime = millis();
   static auto accelTime = millis();
 
   // Update function should be continuously polled
   sensorUpdate();
 
   // Check sensor values every sensorUpdateInterval milliseconds
-  if (millis() - printTime >= sensorUpdateInterval) {
-    printTime = millis();
+  if (millis() - readTime >= sensorUpdateInterval) {
+    readTime = millis();
 
     // Write sensor data to SD card
     String line = rtcReadTime() + "," +
@@ -121,11 +129,9 @@ void loop() {
                   String(maxGyrX) + "," + String(maxGyrY) + "," + String(maxGyrZ) + "," +
                   sensorReadMagX() + "," + sensorReadMagY() + "," + sensorReadMagZ() + "," +
                   sensorReadTemperature() + "," + sensorReadPressure() + "," +
-                  /*sensorReadVOC() + "," + sensorReadCO2() + "," + */sensorReadHumidity();
+                  sensorReadVOC() + "," + sensorReadCO2() + "," + sensorReadHumidity();
     
-    digitalWrite(sensorCS, HIGH);
     sdWrite(line, "data.csv");
-    digitalWrite(sensorCS, LOW);
     // So typically a line of the CSV takes more or less 80-100 bytes of memory
     // 1 reading every 5 seconds for 60 days is 100-150 megabytes
     Serial.println(line);
@@ -193,11 +199,10 @@ void loop() {
                       String(eventMemory[2][(i + memoryIndex)%eventMemorySize]) + "," + String(eventMemory[3][(i + memoryIndex)%eventMemorySize]) + "," + 
                       String(eventMemory[4][(i + memoryIndex)%eventMemorySize]) + "," + String(eventMemory[5][(i + memoryIndex)%eventMemorySize]);
       }
-      digitalWrite(sensorCS, HIGH);
-      sdWrite(lines, "event.csv");
-      digitalWrite(sensorCS, LOW);
-      Serial.println("Saving data!");
-      Serial.println(lines);
+      saveBuffer += lines;
+      //sdWrite(lines, "event.csv");
+      //Serial.println("Saving data!");
+      //Serial.println(lines);
       savingEvent = true;
       eventCounter = 0;
       toSave = eventMemorySize;
@@ -207,28 +212,29 @@ void loop() {
       toSave += eventCounter;
     }
 
+    // FIX THIS
     // Save every eventMemorySize values to keep track of the future after the event
     if (useEvents && savingEvent && eventCounter % eventMemorySize == 0 && eventCounter != 0) {
       // Save previous eventMemorySize values before the event
       String lines = "";
       for(int i = 0; i < eventMemorySize; i++) {
-        lines += eventTime[(i + memoryIndex)%eventMemorySize] + "[future" + String(i) +
-                      " --- eventCounter=" + String (eventCounter) + " --- toSave=" + String(toSave) + "]" +
+        lines += eventTime[(i + memoryIndex)%eventMemorySize] + "[future" + String(i) + "]" +
                       String(eventMemory[0][(i + memoryIndex)%eventMemorySize]) + "," + String(eventMemory[1][(i + memoryIndex)%eventMemorySize]) + "," + 
                       String(eventMemory[2][(i + memoryIndex)%eventMemorySize]) + "," + String(eventMemory[3][(i + memoryIndex)%eventMemorySize]) + "," + 
                       String(eventMemory[4][(i + memoryIndex)%eventMemorySize]) + "," + String(eventMemory[5][(i + memoryIndex)%eventMemorySize]);
       }
-      digitalWrite(sensorCS, HIGH);
-      sdWrite(lines, "event.csv");
-      digitalWrite(sensorCS, LOW);
-      Serial.println("Saving data!");
-      Serial.println(lines);
+      saveBuffer += lines;
+      //sdWrite(lines, "event.csv");
+      //Serial.println("Saving data!");
+      //Serial.println(lines);
     }
 
+    // FIX THIS
     // Keep track of how many values have been polled after the event
     if(useEvents && savingEvent && eventCounter < toSave) {
       eventCounter += 1;
     }
+    // FIX THIS
     else if (useEvents && savingEvent && eventCounter > toSave-2) {
       savingEvent = false;
       // We have to save what we have recorded so far, less than eventMemorySize values ... TODO
