@@ -49,10 +49,18 @@
 #define BHA260_SHUTTLE_ID 0x139
 #define BHI260_SHUTTLE_ID 0x119
 
+PinName c_int = digitalPinToPinName(D14);
+PinName c_mosi = digitalPinToPinName(D8);
+PinName c_cs_sens = digitalPinToPinName(D6);
+PinName c_miso = digitalPinToPinName(D10);
+PinName c_clk = digitalPinToPinName(D9);
+
 //mbed::DigitalOut BHY260_CS_PIN(SPI_PSELSS0, 1);
-mbed::DigitalOut BHY260_CS_PIN((digitalPinToPinName(D6)), 1);
+// mbed::DigitalOut BHY260_CS_PIN(digitalPinToPinName(D6), 1);
+mbed::DigitalOut BHY260_CS_PIN(c_cs_sens, 1);
 //mbed::DigitalIn BHY260_INT_PIN(INT_BHI260);
-mbed::DigitalIn BHY260_INT_PIN(SPI_MISO);
+//mbed::DigitalIn BHY260_INT_PIN(digitalPinToPinName(D10));
+mbed::DigitalIn BHY260_INT_PIN(c_int);
 
 
 bool get_interrupt_status(void)
@@ -103,11 +111,11 @@ const char* get_api_error(int8_t error_code)
 }
 
 //mbed::SPI spi(SPI_PSELMOSI0, SPI_PSELMISO0, SPI_PSELSCK0 /*, SPI_PSELSS0 */);
-mbed::SPI spi(SPI_MOSI, SPI_MISO, SPI_SCK  /*, SPI_PSELSS0 */);
+mbed::SPI spi(c_mosi, c_miso, c_clk  /*, SPI_PSELSS0 */);
 
 void setup_interfaces(bool reset_power, enum bhy2_intf intf)
 {
-    spi.frequency(16000000);
+    spi.frequency(spi_freq);
 }
 
 void close_interfaces(void)

@@ -8,11 +8,12 @@
 #include "sd_card.h"
 
 // Set DISABLE_CS_PIN to disable a second SPI device. Set -1 to disable this feature.
-const int8_t DISABLE_CS_PIN = D6;
+//const int8_t DISABLE_CS_PIN = D6;
+const int8_t DISABLE_CS_PIN = -1;
 
 // SD card configuration
 
-#define SD_CONFIG SdSpiConfig(SD_CS_PIN, SHARED_SPI, SD_SCK_MHZ(4)) // Max speed 48 MHz
+#define SD_CONFIG SdSpiConfig(SD_CS_PIN, SHARED_SPI, SD_SCK_HZ(spi_freq)) // Max speed 48 MHz
 
 //------------------------------------------------------------------------------
 SdFs sd;
@@ -191,6 +192,7 @@ void printConfig(SdioConfig config) {
 }
 //-----------------------------------------------------------------------------
 void sdSetup() {
+  digitalWrite(sensorCS, HIGH);
   cout << F("SdFat version: ") << SD_FAT_VERSION_STR << endl;
   printConfig(SD_CONFIG);
   uint32_t t = millis();
@@ -215,6 +217,7 @@ void sdSetup() {
     errorPrint();
     return;
   }
+  digitalWrite(sensorCS, LOW);
 }
 //------------------------------------------------------------------------------
 void sdCheck() {
