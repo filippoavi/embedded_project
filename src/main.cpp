@@ -198,7 +198,7 @@ void loop() {
     eventMemory[4][memoryIndex] = curGyrY;
     eventMemory[5][memoryIndex] = curGyrZ;
 
-    // DEBUG: Print the current values to the Serial Monitor
+/*     // DEBUG: Print the current values to the Serial Monitor
     Serial.println("------------------------------------------------");
     Serial.print("   Index: ");
     Serial.print(memoryIndex);
@@ -216,7 +216,7 @@ void loop() {
     Serial.print(eventMemory[4][memoryIndex]);
     Serial.print(", ");
     Serial.print(eventMemory[5][memoryIndex]);
-    Serial.println("]");
+    Serial.println("]"); */
 
     // EVENT HANDLING LOGIC --------------------------------------------------------
     if(memoryIndex < eventMemorySize - 1) {
@@ -230,13 +230,14 @@ void loop() {
       // Save previous eventMemorySize values before the event
       String lines = "";
       for(int i = 0; i < eventMemorySize; i++) {
-        lines += eventTime[(i + memoryIndex)%eventMemorySize] + "[past" + String(i) + "]" +
-                      String(eventMemory[0][(i + memoryIndex)%eventMemorySize]) + "," +
-                      String(eventMemory[1][(i + memoryIndex)%eventMemorySize]) + "," + 
-                      String(eventMemory[2][(i + memoryIndex)%eventMemorySize]) + "," +
-                      String(eventMemory[3][(i + memoryIndex)%eventMemorySize]) + "," + 
-                      String(eventMemory[4][(i + memoryIndex)%eventMemorySize]) + "," +
-                      String(eventMemory[5][(i + memoryIndex)%eventMemorySize]) + "\n";
+        lines += String((i + memoryIndex) % eventMemorySize) + " - " +
+                      eventTime[(i + memoryIndex) % eventMemorySize] + "[past" + String(i) + "]" +
+                      String(eventMemory[0][(i + memoryIndex) % eventMemorySize]) + "," +
+                      String(eventMemory[1][(i + memoryIndex) % eventMemorySize]) + "," + 
+                      String(eventMemory[2][(i + memoryIndex) % eventMemorySize]) + "," +
+                      String(eventMemory[3][(i + memoryIndex) % eventMemorySize]) + "," + 
+                      String(eventMemory[4][(i + memoryIndex) % eventMemorySize]) + "," +
+                      String(eventMemory[5][(i + memoryIndex) % eventMemorySize]) + "\n";
       }
       saveBuffer += lines;
       savingEvent = true;
@@ -249,17 +250,18 @@ void loop() {
     }
 
     // Save every eventMemorySize values to keep track of the future after the event
-    if (useEvents && savingEvent && eventCounter % eventMemorySize == 0 && eventCounter != 0) {
+    if (useEvents && savingEvent && (eventCounter) % eventMemorySize == 0 && eventCounter != 0) {
       // Save previous eventMemorySize values before the event
       String lines = "";
       for(int i = 0; i < eventMemorySize; i++) {
-        lines += eventTime[(i + memoryIndex + 1) % eventMemorySize] + "," +
-                      String(eventMemory[0][(i + memoryIndex + 1) % eventMemorySize]) + "," +
-                      String(eventMemory[1][(i + memoryIndex + 1) % eventMemorySize]) + "," + 
-                      String(eventMemory[2][(i + memoryIndex + 1) % eventMemorySize]) + "," +
-                      String(eventMemory[3][(i + memoryIndex + 1) % eventMemorySize]) + "," + 
-                      String(eventMemory[4][(i + memoryIndex + 1) % eventMemorySize]) + "," +
-                      String(eventMemory[5][(i + memoryIndex + 1) % eventMemorySize]) + "\n";
+        lines += String((i + memoryIndex) % eventMemorySize) + " - " +
+                      eventTime[(i + memoryIndex) % eventMemorySize] + "," +
+                      String(eventMemory[0][(i + memoryIndex) % eventMemorySize]) + "," +
+                      String(eventMemory[1][(i + memoryIndex) % eventMemorySize]) + "," + 
+                      String(eventMemory[2][(i + memoryIndex) % eventMemorySize]) + "," +
+                      String(eventMemory[3][(i + memoryIndex) % eventMemorySize]) + "," + 
+                      String(eventMemory[4][(i + memoryIndex) % eventMemorySize]) + "," +
+                      String(eventMemory[5][(i + memoryIndex) % eventMemorySize]) + "\n";
       }
       saveBuffer += lines;
     }
@@ -267,14 +269,14 @@ void loop() {
     // Keep track of how many values have been polled after the event
     if(useEvents && savingEvent && toSave > 0) {
       toSave -= 1;
-      eventCounter += 1;
     }
     else if (useEvents && savingEvent && toSave <= 0) {
       savingEvent = false;
       String lines = "";
       // We have to save what we have recorded so far, less than eventMemorySize values
-      for(int i = - (eventCounter % eventMemorySize) + 1; i < 1; i++) {
-        lines += eventTime[(i + memoryIndex) % eventMemorySize] + "," +
+      for(int i = - (eventCounter % eventMemorySize); i < 0; i++) {
+        lines += String((i + memoryIndex) % eventMemorySize) + " - " +
+                      eventTime[(i + memoryIndex) % eventMemorySize] + "," +
                       String(eventMemory[0][(i + memoryIndex) % eventMemorySize]) + "," +
                       String(eventMemory[1][(i + memoryIndex) % eventMemorySize]) + "," + 
                       String(eventMemory[2][(i + memoryIndex) % eventMemorySize]) + "," +
@@ -284,11 +286,14 @@ void loop() {
       }
       saveBuffer += lines;
 
-      sdWrite(saveBuffer, "event.csv");
       Serial.println("Saving data!");
       Serial.println(saveBuffer);
+      sdWrite(saveBuffer, "event.csv");
 
       saveBuffer = ""; // Reset the save buffer
+    }
+    if(useEvents && savingEvent) {
+      eventCounter += 1;
     }
     //------------------------------------------------------------------------------
   }
