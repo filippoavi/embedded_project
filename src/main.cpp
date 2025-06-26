@@ -3,6 +3,9 @@
 #include "sensors.h"
 #include "rtc.h"
 //#include "usb.h"
+extern "C" {
+  #include "tusb.h"
+}
 
 #define DISABLE_FS_H_WARNING  // Disable warning for type File not defined.
 
@@ -46,6 +49,42 @@ static int eventCounter = 0;
 bool eventDetected = false;
 bool savingEvent = false;
 static String curTime;
+//------------------------------------------------------------------------------
+
+// USB ----------------------------------------------------------------------
+// USB Mass Storage callbacks
+extern "C" {
+
+int32_t tud_msc_read_cb(uint8_t lun, uint32_t lba, uint32_t offset, void* buffer, uint32_t bufsize) {
+  if (!card.readBlock(lba, (uint8_t*)buffer)) return -1;
+  return BLOCK_SIZE;
+}
+
+int32_t tud_msc_write_cb(uint8_t lun, uint32_t lba, uint32_t offset, uint8_t const* buffer, uint32_t bufsize) {
+  if (!card.writeBlock(lba, buffer)) return -1;
+  return BLOCK_SIZE;
+}
+
+void tud_msc_inquiry_cb(uint8_t lun, uint8_t vendor_id[8], uint8_t product_id[16], uint8_t product_rev[4]) {
+  memcpy(vendor_id, "PORTENTA", 8);
+  memcpy(product_id, "SD STORAGE", 10);
+  memcpy(product_rev, "1.0", 4);
+}
+
+bool tud_msc_test_unit_ready_cb(uint8_t lun) {
+  return true;
+}
+
+void tud_msc_capacity_cb(uint8_t lun, uint32_t* block_count, uint16_t* block_size) {
+  *block_count = card.cardSize();
+  *block_size  = BLOCK_SIZE;
+}
+
+int32_t tud_msc_flush_cb(uint8_t lun) {
+  return 0;
+}
+
+}
 //------------------------------------------------------------------------------
 
 //------------------------------------------------------------------------------
@@ -111,6 +150,10 @@ void setup() {
   /* nicla::leds.setColor(green);
   delay(3000);
   nicla::leds.setColor(off); */
+
+  // USB Mass Storage initialization
+  tusb_init(); // Init USB stack
+  Serial.println("USB MSC ready.");
 }
 //------------------------------------------------------------------------------
 void loop() {
@@ -247,4 +290,5 @@ void loop() {
   }
 
   //usbLoop();
+  tud_task(); // Required by TinyUSB
 }
