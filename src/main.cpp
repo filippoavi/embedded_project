@@ -2,6 +2,7 @@
 #include "sd_card.h"
 #include "sensor_manager.h"
 #include "rtc.h"
+#include "load_firmware.h"
 //#include "usb.h"
 
 #define DISABLE_FS_H_WARNING  // Disable warning for type File not defined.
@@ -13,7 +14,7 @@ bool initializeData = true; // If true: delete and reinitialize data.csv file
 
 // Sensors ---------------------------------------------------------------------
 unsigned long sensorUpdateInterval = 5000; // 5 seconds 
-unsigned long accelerationPollInterval = 100; // 10 Hz
+unsigned long accelerationPollInterval = 50; // 20 Hz
 static float maxAccelMag = 0;
 static float accelMagnitude;
 static float maxGyroMag = 0;
@@ -31,13 +32,14 @@ static float curGyrX;
 static float curGyrY;
 static float curGyrZ;
 bool useEvents = true; // Toggle events usage
-bool bsecDebug = false;
+bool bsecDebug = true;
+bool uploadBHI260Firmware = false;
 //------------------------------------------------------------------------------
 
 // Event memory ----------------------------------------------------------------
 int accTreshold = 6000;
-int gyrTreshold = 200;
-const int eventMemorySize = 10;
+int gyrTreshold = 300;
+const int eventMemorySize = 20;
 static int toSave = 0;
 static int16_t eventMemory[6][eventMemorySize];
 static String eventTime[eventMemorySize];
@@ -71,6 +73,13 @@ void setup() {
   pinMode(SD_CS_PIN, OUTPUT);
   digitalWrite(SD_CS_PIN, HIGH);
   delay(1000);
+
+  if (uploadBHI260Firmware) {
+    // Upload BHI260 firmware if needed
+    Serial.println("Uploading BHI260 firmware...");
+    bhi260ap_load_firmware();
+    Serial.println("BHI260 firmware uploaded successfully.");
+  }
 
   // Initialize sensors, SD card and RTC
   sdSetup();
