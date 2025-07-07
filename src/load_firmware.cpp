@@ -140,7 +140,7 @@ int bhi260ap_load_firmware(void)
 #endif
         Serial.println("   Boot Complete");
 
-        temp_rslt = bhy2_get_error_value(&sensor_error, &bhy2);
+/*         temp_rslt = bhy2_get_error_value(&sensor_error, &bhy2);
         if (sensor_error)
             printf("%s\r\n", get_sensor_error_text(sensor_error));
         print_api_error(rslt, &bhy2);
@@ -149,7 +149,7 @@ int bhi260ap_load_firmware(void)
         rslt = bhy2_get_kernel_version(&version, &bhy2);
         print_api_error(rslt, &bhy2);
         if ((rslt == BHY2_OK) && (version != 0))
-            printf("Boot successful. Kernel version %u.\r\n", version);
+            printf("Boot successful. Kernel version %u.\r\n", version); */
     }
     else
     {
