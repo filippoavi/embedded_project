@@ -39,7 +39,7 @@ bool uploadBHI260Firmware = false;
 // Event memory ----------------------------------------------------------------
 int accTreshold = 6000;
 int gyrTreshold = 300;
-const int eventMemorySize = 20;
+const int eventMemorySize = 80;
 static int toSave = 0;
 static int16_t eventMemory[6][eventMemorySize];
 static String eventTime[eventMemorySize];
@@ -49,6 +49,7 @@ bool eventDetected = false;
 bool savingEvent = false;
 static String curTime;
 static String saveBuffer = "";
+const int writeLength = 1; // Multiplies the eventMemorySize to determine how many values to save at once
 //------------------------------------------------------------------------------
 
 //------------------------------------------------------------------------------
@@ -207,26 +208,6 @@ void loop() {
     eventMemory[4][memoryIndex] = curGyrY;
     eventMemory[5][memoryIndex] = curGyrZ;
 
-/*     // DEBUG: Print the current values to the Serial Monitor
-    Serial.println("------------------------------------------------");
-    Serial.print("   Index: ");
-    Serial.print(memoryIndex);
-    Serial.print("   Time: ");
-    Serial.print(eventTime[memoryIndex]);
-    Serial.print(" Acceleration: [");
-    Serial.print(eventMemory[0][memoryIndex]);
-    Serial.print(", ");
-    Serial.print(eventMemory[1][memoryIndex]);
-    Serial.print(", ");
-    Serial.print(eventMemory[2][memoryIndex]);
-    Serial.print("] Gyroscope: [");
-    Serial.print(eventMemory[3][memoryIndex]);
-    Serial.print(", ");
-    Serial.print(eventMemory[4][memoryIndex]);
-    Serial.print(", ");
-    Serial.print(eventMemory[5][memoryIndex]);
-    Serial.println("]"); */
-
     // EVENT HANDLING LOGIC --------------------------------------------------------
     if(memoryIndex < eventMemorySize - 1) {
       memoryIndex++;
@@ -234,6 +215,7 @@ void loop() {
     else {
       memoryIndex = 0;
     }
+
     // If acceleration or rotation speed over a certain treshold, save past to the SD card and keep track of the next values
     if(useEvents && (accelMagnitude > accTreshold || gyroMagnitude > gyrTreshold) && !savingEvent) {
       // Save previous eventMemorySize values before the event
@@ -255,7 +237,7 @@ void loop() {
     }
     // If event is detected while already saving values, keep track of more values
     else if(useEvents && (accelMagnitude > accTreshold || gyroMagnitude > gyrTreshold) && savingEvent) {
-      toSave = eventMemorySize; // check!
+      toSave = eventMemorySize;
     }
 
     // Save every eventMemorySize values to keep track of the future after the event
@@ -294,13 +276,22 @@ void loop() {
                       String(eventMemory[5][(i + memoryIndex) % eventMemorySize]) + "\n";
       }
       saveBuffer += lines;
-
-      Serial.println("Saving data!");
+      
+      // Lastly, write the saveBuffer to the SD card
+      Serial.println("Writing final event data to SD card!");
       Serial.println(saveBuffer);
       sdWrite(saveBuffer, "event.csv");
-
       saveBuffer = ""; // Reset the save buffer
     }
+
+    // Every writeLength values, save the event data to the SD card to avoid having the buffer too big (take too much RAM and causes problem to the SD card when writing)
+    if(useEvents && savingEvent && eventCounter % (writeLength * eventMemorySize) == 0 && eventCounter != 0) {
+      Serial.println("Writing incremental event data to SD card!");
+      Serial.println(saveBuffer);
+      sdWrite(saveBuffer, "event.csv");
+      saveBuffer = ""; // Reset the save buffer
+    }
+
     if(useEvents && savingEvent) {
       eventCounter += 1;
     }

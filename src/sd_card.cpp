@@ -287,15 +287,17 @@ void sdTestWrite() {
   if (!myFile.remove()) sd.errorHalt("Error file.remove");
 }
 //------------------------------------------------------------------------------
-void sdWrite(String line, const char* filename, bool keepOpen) {
+void sdWrite(String line, const char* filename) {
   if (!myFile.open(filename, O_RDWR | O_CREAT | O_AT_END)) {
+    Serial.println("Error: opening file for write failed");
     sd.errorHalt("\nopening for write failed");
+    return;
   }
-  // if the file opened okay, write to it:
-  myFile.println(line);
-  // close the file:
-  if (!keepOpen)
-  {
-    myFile.close();
-  }  
+  // If the file opened okay, write to it
+  if (myFile.println(line) <= 0) {
+    Serial.println("Error: writing to file failed");
+  }
+  //myFile.flush();
+  // Close the file
+  myFile.close();
 }
