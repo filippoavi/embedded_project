@@ -33,7 +33,7 @@ static float curGyrY;
 static float curGyrZ;
 bool useEvents = true; // Toggle events usage
 bool bsecDebug = true;
-bool uploadBHI260Firmware = false;
+bool uploadBHI260Firmware = true;
 //------------------------------------------------------------------------------
 
 // Event memory ----------------------------------------------------------------

@@ -1,9 +1,26 @@
-#include "load_firmware.h"
-#include "fw.h"
+// reference used: https://github.com/boschsensortec/BHI2xy_SensorAPI/blob/master/examples/load_firmware/load_firmware.c
 
-// If your fw.h uses different names, adjust these defines:
-#define FIRMWARE_ARRAY BHI260AP_NiclaSenseME_flash_fw
-#define FIRMWARE_SIZE  BHI260AP_NiclaSenseME_flash_fw_len
+#include "load_firmware.h"
+//#include "firmwares/fw.h"
+#include "firmwares/bhi260_aux_bmm150_bmp390_bme688_flash.h"
+
+/* FIRMWARE UPLOAD:
+    INFO:
+    * only include one firmware at a time
+    * modify the defines below depending on the firmware you want to use
+
+    LIST OF FIRMWARES:
+    * bhi260_aux_bmm150_bmp390_bme688_flash.h       original firmware of Smart Sens 2 Click flash version (default)
+    * bhi260_aux_bmm150_bmp390_bme688.h             original firmware of Smart Sens 2 Click (do not use)
+    * fw.h                                          arduino version of BHI260AP Nicla Sense ME firmware (do not use)
+    * BHI260AP_aux_BMM150_BMP390_BME688-flash.fw.h  bosch original firmware of BHI260AP flash version (to be tested)
+    * BHI260AP_aux_BMM150_BMP390_BME688.fw.h        bosch original firmware of BHI260AP (do not use)
+*/
+
+//#define FIRMWARE_ARRAY BHI260AP_NiclaSenseME_flash_fw
+//#define FIRMWARE_SIZE  BHI260AP_NiclaSenseME_flash_fw_len
+#define FIRMWARE_ARRAY smartsens2_firmware_image
+#define FIRMWARE_SIZE sizeof(smartsens2_firmware_image)
 
 static void print_api_error(int8_t rslt, struct bhy2_dev *dev)
 {
@@ -124,11 +141,11 @@ int bhi260ap_load_firmware(void)
 #endif
 
         rslt = upload_firmware(&bhy2);
-        temp_rslt = bhy2_get_error_value(&sensor_error, &bhy2);
+/*         temp_rslt = bhy2_get_error_value(&sensor_error, &bhy2);
         if (sensor_error)
             printf("%s\r\n", get_sensor_error_text(sensor_error));
         print_api_error(rslt, &bhy2);
-        print_api_error(temp_rslt, &bhy2);
+        print_api_error(temp_rslt, &bhy2); */
 
         Serial.println("   Booting from flash or RAM...");
 #ifdef UPLOAD_FIRMWARE_TO_FLASH

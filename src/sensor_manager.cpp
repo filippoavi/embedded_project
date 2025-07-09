@@ -23,7 +23,7 @@ void sensorSetup() {
   temperature.begin(1000, 0);  // Temperature
   //gas.begin(1000,0);
   pressure.begin(1000, 0);     // Pressure
-  bsec.begin(10, 10);         // BSEC (Gas) Sensor
+  bsec.begin(1000, 0);         // BSEC (Gas) Sensor
   //digitalWrite(sensorCS, LOW);
   delay(1000);
 }
