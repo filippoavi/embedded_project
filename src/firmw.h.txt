@@ -1,0 +1,19 @@
+#ifndef LOAD_FIRMWARE_H
+#define LOAD_FIRMWARE_H
+
+#include <stdint.h>
+#include <stdbool.h>
+#include "Arduino_bhy2.h"
+//#include "bhy2_parse.h"
+#include "common.h"
+
+#define BHY2_RD_WR_LEN 256
+#define UPLOAD_FIRMWARE_TO_FLASH
+
+/**
+ * @brief Loads firmware to the BHI260AP (to RAM or Flash, depending on define).
+ * @return 0 on success, error code otherwise.
+ */
+int bhi260ap_load_firmware(void);
+
+#endif // LOAD_FIRMWARE_H
