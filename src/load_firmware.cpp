@@ -11,10 +11,9 @@
 
     LIST OF FIRMWARES:
     ** bhi260_aux_bmm150_bmp390_bme688_flash.h       original firmware of Smart Sens 2 Click flash version (DEFAULT)
-    *- bhi260_aux_bmm150_bmp390_bme688.h             original firmware of Smart Sens 2 Click (do not use)
     * fw.h                                          arduino version of BHI260AP Nicla Sense ME firmware flash (do not use)
     * BHI260AP_aux_BMM150_BMP390_BME688-flash.fw.h  bosch original firmware of BHI260AP flash version (to be tested)
-    *- BHI260AP_aux_BMM150_BMP390_BME688.fw.h        bosch original firmware of BHI260AP (do not use)
+    * others...
 */
 
 //#define FIRMWARE_ARRAY BHI260AP_NiclaSenseME_flash_fw
