@@ -80,6 +80,12 @@ void setup() {
     Serial.println("Uploading BHI260 firmware...");
     bhi260ap_load_firmware();
     Serial.println("BHI260 firmware uploaded successfully.");
+
+    pinMode(sensorCS, OUTPUT);
+    digitalWrite(sensorCS, HIGH);
+    pinMode(SD_CS_PIN, OUTPUT);
+    digitalWrite(SD_CS_PIN, HIGH);
+    delay(1000);
   }
 
   // Initialize sensors, SD card and RTC
