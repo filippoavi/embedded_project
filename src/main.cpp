@@ -33,12 +33,12 @@ static float curGyrY;
 static float curGyrZ;
 bool useEvents = true; // Toggle events usage
 bool bsecDebug = true;
-bool uploadBHI260Firmware = true;
+bool uploadBHI260Firmware = false;
 //------------------------------------------------------------------------------
 
 // Event memory ----------------------------------------------------------------
-int accTreshold = 6000;
-int gyrTreshold = 300;
+int accTreshold = 8000;
+int gyrTreshold = 600;
 const int eventMemorySize = 80;
 static int toSave = 0;
 static int16_t eventMemory[6][eventMemorySize];

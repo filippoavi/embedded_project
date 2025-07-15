@@ -2,8 +2,8 @@
 
 #include "load_firmware.h"
 //#include "firmwares/fw.h"
-#include "firmwares/bhi260_aux_bmm150_bmp390_bme688_flash.h"
-
+//#include "firmwares/bhi260_aux_bmm150_bmp390_bme688_flash.h"
+#include "firmwares/BHI260AP_aux_BMM150_BMP390_BME688-flash.fw.h"
 /* FIRMWARE UPLOAD:
     INFO:
     * only include one firmware at a time
@@ -18,8 +18,8 @@
 
 //#define FIRMWARE_ARRAY BHI260AP_NiclaSenseME_flash_fw
 //#define FIRMWARE_SIZE  BHI260AP_NiclaSenseME_flash_fw_len
-#define FIRMWARE_ARRAY smartsens2_firmware_image
-#define FIRMWARE_SIZE sizeof(smartsens2_firmware_image)
+#define FIRMWARE_ARRAY bhy2_firmware_image
+#define FIRMWARE_SIZE sizeof(bhy2_firmware_image)
 
 static void print_api_error(int8_t rslt, struct bhy2_dev *dev)
 {
