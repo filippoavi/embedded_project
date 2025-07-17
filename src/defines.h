@@ -9,6 +9,10 @@ const uint8_t SD_CS_PIN = D7;
 // Sensors SPI Chip Select pin
 const uint8_t sensorCS = D6;
 
+// GPIO pins for measurements
+const uint8_t GPIO_1_PIN = D4;
+const uint8_t GPIO_2_PIN = D5;
+
 // Common pins definitions
 extern PinName c_int;
 extern PinName c_mosi;

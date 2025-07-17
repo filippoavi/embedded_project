@@ -12,10 +12,21 @@ bool sdDiagnosticCheck = false; // Perform SD card diagnostics
 bool initializeData = true; // If true: delete and reinitialize data.csv file
 //------------------------------------------------------------------------------
 
+// Measuremets ---------------------------------------------------
+bool readSensors = true;
+bool readRTC = false;
+bool writeToSD = false;
+bool writeToSDEvent = false; // Write to event.csv file
+String line = "2025/03/21-00:00:00,1860,-318,4554,441,321,-270,273,-138,-222,24.73,996.55,0.45,500,40.22";
+String lineEvent = "2025/03/23-16:09:26,118,-14,4093,-1,-2,1\n2025/03/22-18:05:46,127,-9,4103,-1,1,0\n2025/03/22-16:34:51,114,-12,4081,0,-2,0\n2025/03/23-18:48:58,117,-18,4115,2,-2,2\n2025/03/24-23:21:31,127,-13,4094,-1,-1,2\n2025/03/25-17:23:10,118,-28,4112,-1,-1,-1\n2025/03/21-16:27:48,121,-14,4106,-2,-1,1\n2025/03/23-03:10:35,119,-18,4088,-2,1,1\n2025/03/25-11:54:58,114,-29,4093,2,-2,0\n2025/03/21-11:23:48,109,-2,4089,-2,0,2\n2025/03/25-20:24:09,120,-13,4106,-1,0,0\n2025/03/23-05:54:52,120,-4,4106,-1,-2,0\n2025/03/24-11:23:20,111,-24,4089,-2,1,-1\n2025/03/23-02:38:53,109,-19,4088,-2,-1,-2\n2025/03/24-12:14:16,127,-30,4099,2,1,2\n2025/03/21-10:32:20,112,-25,4106,-2,2,2\n2025/03/22-23:25:31,110,-24,4093,1,-2,-2\n2025/03/24-15:47:41,115,-18,4114,2,-1,-2\n2025/03/25-18:32:48,129,-15,4080,-2,1,-1\n2025/03/21-10:43:52,115,-24,4083,1,2,-1\n2025/03/23-22:22:05,116,-2,4101,0,-2,-1\n2025/03/21-07:30:36,107,-25,4108,-1,-1,-2\n2025/03/22-20:40:22,128,-8,4081,-1,-2,-2\n2025/03/22-07:29:36,129,-5,4083,2,1,-2\n2025/03/23-16:58:49,121,-28,4118,0,1,0\n2025/03/22-16:47:33,117,-26,4108,2,0,2\n2025/03/25-21:57:11,124,-14,4102,2,2,-1\n2025/03/23-11:50:26,105,-6,4111,1,2,2\n2025/03/22-08:00:10,129,-9,4081,2,2,0\n2025/03/25-03:09:00,120,-12,4111,-2,-1,-1\n2025/03/23-12:06:23,102,-10,4090,-1,-2,-2\n2025/03/25-20:23:23,113,-9,4116,0,-2,-2\n2025/03/22-18:21:47,111,-6,4109,-1,-1,0\n2025/03/25-13:59:43,107,-20,4115,1,-2,-1\n2025/03/22-08:22:41,127,-21,4093,-1,0,1\n2025/03/22-05:44:05,115,-16,4086,1,1,2\n2025/03/21-10:23:47,123,-26,4087,0,2,2\n2025/03/22-18:14:10,114,-19,4098,0,-2,-1\n2025/03/21-16:18:06,109,-21,4106,-2,1,1\n2025/03/22-19:32:15,115,-26,4117,-2,2,2\n2025/03/21-20:53:46,111,-25,4090,1,0,-2\n2025/03/21-03:18:52,109,-25,4090,-1,2,-2\n2025/03/21-18:21:08,105,-26,4106,-2,0,-1\n2025/03/23-05:28:49,108,-23,4085,0,-1,2\n2025/03/24-05:40:54,123,-11,4107,-2,-2,2\n2025/03/24-16:26:01,116,-1,4110,-2,0,-2\n2025/03/24-07:36:15,107,-18,4100,-1,0,-2\n2025/03/21-07:10:29,115,-26,4096,-2,0,1\n2025/03/21-01:27:55,129,-27,4102,0,-1,1\n2025/03/23-17:00:35,111,-7,4085,-1,-1,1\n2025/03/23-10:37:43,106,-11,4080,-1,2,-1\n2025/03/21-13:43:05,118,-16,4090,0,-1,0\n2025/03/25-13:14:15,110,-10,4098,-2,0,2\n2025/03/25-08:26:59,110,-24,4097,-2,2,-2\n2025/03/23-13:33:43,128,-7,4109,-1,0,1\n2025/03/21-04:33:47,126,-17,4080,2,0,-1\n2025/03/22-05:22:54,123,-9,4099,0,-1,-2\n2025/03/25-12:00:12,119,-2,4085,-1,2,0\n2025/03/22-16:54:07,112,-1,4103,2,1,-2\n2025/03/24-10:37:13,108,-30,4110,-2,2,1\n2025/03/23-09:18:14,100,-13,4107,-1,-1,2\n2025/03/21-16:40:24,129,-7,4107,-1,1,-2\n2025/03/24-16:17:57,111,-6,4099,-2,2,-2\n2025/03/24-00:00:27,112,-14,4096,1,-2,1\n2025/03/22-10:18:53,107,-30,4088,-1,1,2\n2025/03/22-20:00:31,104,-7,4112,2,-1,-2\n2025/03/23-06:35:43,129,-3,4088,-1,2,0\n2025/03/25-18:25:42,120,-12,4104,2,-1,-2\n2025/03/24-19:13:46,123,-21,4111,-2,1,2\n2025/03/21-04:20:04,101,-29,4097,-1,1,-2\n2025/03/22-03:07:43,126,-18,4104,2,-1,0\n2025/03/21-17:32:36,129,-12,4116,2,-1,-2\n2025/03/23-01:46:44,120,-16,4107,-2,1,2\n2025/03/21-08:55:25,116,-12,4094,-2,0,2\n2025/03/25-02:42:51,101,-23,4112,0,2,0\n2025/03/25-14:02:45,106,-3,4118,-1,1,-2\n2025/03/21-05:38:48,105,-21,4111,-1,-1,-2\n2025/03/22-02:28:24,123,-25,4095,-2,0,1\n2025/03/25-04:59:20,122,-19,4103,-1,-2,2";
+
+int count = 0;
+
+
 // Sensors ---------------------------------------------------------------------
-unsigned long sensorUpdateInterval = 5000; // 5 seconds 
+unsigned long sensorUpdateInterval = 10; // 60 Hz 
 unsigned long accelerationPollInterval = 50; // 20 Hz
-static float maxAccelMag = 0;
+/* static float maxAccelMag = 0;
 static float accelMagnitude;
 static float maxGyroMag = 0;
 static float gyroMagnitude;
@@ -30,9 +41,9 @@ static float maxGyrY = 0;
 static float maxGyrZ = 0;
 static float curGyrX;
 static float curGyrY;
-static float curGyrZ;
+static float curGyrZ; */
 bool useEvents = true; // Toggle events usage
-bool bsecDebug = true;
+bool bsecDebug = false;
 bool uploadBHI260Firmware = false;
 //------------------------------------------------------------------------------
 
@@ -74,6 +85,11 @@ void setup() {
   pinMode(SD_CS_PIN, OUTPUT);
   digitalWrite(SD_CS_PIN, HIGH);
   delay(1000);
+
+  pinMode(GPIO_1_PIN, OUTPUT);
+  pinMode(GPIO_2_PIN, OUTPUT);
+  digitalWrite(GPIO_1_PIN, LOW);
+  digitalWrite(GPIO_2_PIN, LOW);
 
   if (uploadBHI260Firmware) {
     // Upload BHI260 firmware if needed
@@ -130,179 +146,65 @@ void setup() {
 }
 //------------------------------------------------------------------------------
 void loop() {
-  static auto readTime = millis();
-  static auto accelTime = millis();
+  digitalWrite(GPIO_1_PIN, HIGH);
+  digitalWrite(GPIO_2_PIN, LOW);
 
-  // Update function should be continuously polled
-  sensorUpdate();
 
-  // Check sensor values every sensorUpdateInterval milliseconds
-  if (millis() - readTime >= sensorUpdateInterval) {
-    readTime = millis();
+  for(int count = 0; count < 1000; count++) {
+    static auto readTime = millis();
 
-    // Write sensor data to SD card
-    String line = rtcReadTime() + "," +
-                  String(maxAccX) + "," + String(maxAccY) + "," + String(maxAccZ) + "," +
-                  String(maxGyrX) + "," + String(maxGyrY) + "," + String(maxGyrZ) + "," +
-                  sensorReadMagX() + "," + sensorReadMagY() + "," + sensorReadMagZ() + "," +
-                  sensorReadTemperature() + "," + sensorReadPressure() + "," +
-                  sensorReadVOC() + "," + sensorReadCO2() + "," + sensorReadHumidity();
-    
-    Serial.println(line);
-    sdWrite(line, "data.csv");
-    // So typically a line of the CSV takes more or less 80-100 bytes of memory
-    // 1 reading every 5 seconds for 60 days is 100-150 megabytes
-    
-
-    // DEBUG BSEC
-    if (bsecDebug) {
-      Serial.print("BSEC: VOC=");
-      Serial.print(bsec.b_voc_eq());
-      Serial.print(" CO2=");
-      Serial.print(bsec.co2_eq());
-      Serial.print(" Humidity=");
-      Serial.print(bsec.comp_h());
-      Serial.print(" Temperature=");
-      Serial.print(bsec.comp_t());
-      Serial.print(" Accuracy=");
-      Serial.println(bsec.accuracy());
-    }
-
-    // Reset the maximum acceleration and rotation speed value
-    maxAccelMag = 0;
-    maxAccX = 0;
-    maxAccY = 0;
-    maxAccZ = 0;
-    maxGyroMag = 0;
-    maxGyrX = 0;
-    maxGyrY = 0;
-    maxGyrZ = 0;
-  }
-
-  // Poll acceleration and rotation speed every accelerationPollInterval milliseconds
-  if(millis() - accelTime >= accelerationPollInterval) {
-    accelTime = millis();
-    curAccX = sensorGetAccX();
-    curAccY = sensorGetAccY();
-    curAccZ = sensorGetAccZ();
-    curGyrX = sensorGetGyroX();
-    curGyrY = sensorGetGyroY();
-    curGyrZ = sensorGetGyroZ();
-    curTime = rtcReadTime();
-    accelMagnitude = sqrt(curAccX * curAccX + curAccY * curAccY + curAccZ * curAccZ);
-    gyroMagnitude = sqrt(curGyrX * curGyrX + curGyrY * curGyrY + curGyrZ * curGyrZ);
-    // Memorize the maximum value of acceleration and rotation speed of the last 5 seconds
-    if(accelMagnitude > maxAccelMag) {
-      maxAccelMag = accelMagnitude;
-      maxAccX = curAccX;
-      maxAccY = curAccY;
-      maxAccZ = curAccZ;
-    }
-    if(gyroMagnitude > maxGyroMag) {
-      maxGyroMag = gyroMagnitude;
-      maxGyrX = curGyrX;
-      maxGyrY = curGyrY;
-      maxGyrZ = curGyrZ;
-    }
-
-    // Keep track of the last eventMemorySize acceleration and rotation speed values
-    eventTime[memoryIndex] = curTime;
-    eventMemory[0][memoryIndex] = curAccX;
-    eventMemory[1][memoryIndex] = curAccY;
-    eventMemory[2][memoryIndex] = curAccZ;
-    eventMemory[3][memoryIndex] = curGyrX;
-    eventMemory[4][memoryIndex] = curGyrY;
-    eventMemory[5][memoryIndex] = curGyrZ;
-
-    // EVENT HANDLING LOGIC --------------------------------------------------------
-    if(memoryIndex < eventMemorySize - 1) {
-      memoryIndex++;
-    }
-    else {
-      memoryIndex = 0;
-    }
-
-    // If acceleration or rotation speed over a certain treshold, save past to the SD card and keep track of the next values
-    if(useEvents && (accelMagnitude > accTreshold || gyroMagnitude > gyrTreshold) && !savingEvent) {
-      // Save previous eventMemorySize values before the event
-      String lines = "";
-      for(int i = 0; i < eventMemorySize; i++) {
-        lines += String((i + memoryIndex) % eventMemorySize) + " - " +
-                      eventTime[(i + memoryIndex) % eventMemorySize] + "[past" + String(i) + "]" +
-                      String(eventMemory[0][(i + memoryIndex) % eventMemorySize]) + "," +
-                      String(eventMemory[1][(i + memoryIndex) % eventMemorySize]) + "," + 
-                      String(eventMemory[2][(i + memoryIndex) % eventMemorySize]) + "," +
-                      String(eventMemory[3][(i + memoryIndex) % eventMemorySize]) + "," + 
-                      String(eventMemory[4][(i + memoryIndex) % eventMemorySize]) + "," +
-                      String(eventMemory[5][(i + memoryIndex) % eventMemorySize]) + "\n";
-      }
-      saveBuffer += lines;
-      savingEvent = true;
-      eventCounter = 0;
-      toSave = eventMemorySize;
-    }
-    // If event is detected while already saving values, keep track of more values
-    else if(useEvents && (accelMagnitude > accTreshold || gyroMagnitude > gyrTreshold) && savingEvent) {
-      toSave = eventMemorySize;
-    }
-
-    // Save every eventMemorySize values to keep track of the future after the event
-    if (useEvents && savingEvent && (eventCounter) % eventMemorySize == 0 && eventCounter != 0) {
-      // Save previous eventMemorySize values before the event
-      String lines = "";
-      for(int i = 0; i < eventMemorySize; i++) {
-        lines += String((i + memoryIndex) % eventMemorySize) + " - " +
-                      eventTime[(i + memoryIndex) % eventMemorySize] + "," +
-                      String(eventMemory[0][(i + memoryIndex) % eventMemorySize]) + "," +
-                      String(eventMemory[1][(i + memoryIndex) % eventMemorySize]) + "," + 
-                      String(eventMemory[2][(i + memoryIndex) % eventMemorySize]) + "," +
-                      String(eventMemory[3][(i + memoryIndex) % eventMemorySize]) + "," + 
-                      String(eventMemory[4][(i + memoryIndex) % eventMemorySize]) + "," +
-                      String(eventMemory[5][(i + memoryIndex) % eventMemorySize]) + "\n";
-      }
-      saveBuffer += lines;
-    }
-
-    // Keep track of how many values have been polled after the event
-    if(useEvents && savingEvent && toSave > 0) {
-      toSave -= 1;
-    }
-    else if (useEvents && savingEvent && toSave <= 0) {
-      savingEvent = false;
-      String lines = "";
-      // We have to save what we have recorded so far, less than eventMemorySize values
-      for(int i = - (eventCounter % eventMemorySize); i < 0; i++) {
-        lines += String((i + memoryIndex) % eventMemorySize) + " - " +
-                      eventTime[(i + memoryIndex) % eventMemorySize] + "," +
-                      String(eventMemory[0][(i + memoryIndex) % eventMemorySize]) + "," +
-                      String(eventMemory[1][(i + memoryIndex) % eventMemorySize]) + "," + 
-                      String(eventMemory[2][(i + memoryIndex) % eventMemorySize]) + "," +
-                      String(eventMemory[3][(i + memoryIndex) % eventMemorySize]) + "," + 
-                      String(eventMemory[4][(i + memoryIndex) % eventMemorySize]) + "," +
-                      String(eventMemory[5][(i + memoryIndex) % eventMemorySize]) + "\n";
-      }
-      saveBuffer += lines;
+    // Check sensor values every sensorUpdateInterval milliseconds
+    if (millis() - readTime >= sensorUpdateInterval) {
+      readTime = millis();
       
-      // Lastly, write the saveBuffer to the SD card
-      Serial.println("Writing final event data to SD card!");
-      Serial.println(saveBuffer);
-      sdWrite(saveBuffer, "event.csv");
-      saveBuffer = ""; // Reset the save buffer
-    }
+      if(readSensors)
+      {
+        digitalWrite(GPIO_1_PIN, HIGH);
+        digitalWrite(GPIO_2_PIN, HIGH);
+        sensorUpdate();
+        digitalWrite(GPIO_1_PIN, LOW);
+        digitalWrite(GPIO_2_PIN, HIGH);
+        sensorGetAccX();
+        sensorGetAccY();
+        sensorGetAccZ();
+        sensorGetGyroX();
+        sensorGetGyroY();
+        sensorGetGyroZ();
+        sensorReadMagX();
+        sensorReadMagY();
+        sensorReadMagZ();
+        sensorReadTemperature();
+        sensorReadPressure();
+        sensorReadVOC();
+        sensorReadCO2();
+        sensorReadHumidity();
+        digitalWrite(GPIO_1_PIN, LOW);
+        digitalWrite(GPIO_2_PIN, LOW);
+      }
+      
+      if(readRTC) {
+        digitalWrite(GPIO_1_PIN, HIGH);
+        digitalWrite(GPIO_2_PIN, HIGH);
+        rtcReadTime();
+        digitalWrite(GPIO_1_PIN, LOW);
+        digitalWrite(GPIO_2_PIN, LOW);
+      }
 
-    // Every writeLength values, save the event data to the SD card to avoid having the buffer too big (take too much RAM and causes problem to the SD card when writing)
-    if(useEvents && savingEvent && eventCounter % (writeLength * eventMemorySize) == 0 && eventCounter != 0) {
-      Serial.println("Writing incremental event data to SD card!");
-      Serial.println(saveBuffer);
-      sdWrite(saveBuffer, "event.csv");
-      saveBuffer = ""; // Reset the save buffer
-    }
+      if (writeToSD){
+        digitalWrite(GPIO_1_PIN, HIGH);
+        digitalWrite(GPIO_2_PIN, HIGH);
+        sdWrite(line, "data.csv");
+        digitalWrite(GPIO_1_PIN, LOW);
+        digitalWrite(GPIO_2_PIN, LOW);
+      }
 
-    if(useEvents && savingEvent) {
-      eventCounter += 1;
+      if (writeToSDEvent){
+        digitalWrite(GPIO_1_PIN, HIGH);
+        digitalWrite(GPIO_2_PIN, HIGH);
+        sdWrite(lineEvent, "event.csv");
+        digitalWrite(GPIO_1_PIN, LOW);
+        digitalWrite(GPIO_2_PIN, LOW);
+      }
     }
-    //------------------------------------------------------------------------------
   }
-
-  //usbLoop();
 }
