@@ -166,6 +166,7 @@ void loop() {
       Serial.print(bsec.comp_t());
       Serial.print(" Accuracy=");
       Serial.println(bsec.accuracy());
+      Serial.println(bsec.toString());
     }
 
     // Reset the maximum acceleration and rotation speed value
