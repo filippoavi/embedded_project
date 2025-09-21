@@ -73,8 +73,10 @@ void setup() {
   digitalWrite(sensorCS, HIGH);
   pinMode(SD_CS_PIN, OUTPUT);
   digitalWrite(SD_CS_PIN, HIGH);
-  delay(1000);
-
+  pinMode(D10, INPUT_PULLUP);
+  pinMode(D8, OUTPUT);
+  delay(2000);
+  
   if (uploadBHI260Firmware) {
     // Upload BHI260 firmware if needed
     Serial.println("Uploading BHI260 firmware...");
@@ -85,16 +87,11 @@ void setup() {
     digitalWrite(sensorCS, HIGH);
     pinMode(SD_CS_PIN, OUTPUT);
     digitalWrite(SD_CS_PIN, HIGH);
-    delay(1000);
+    delay(2000);
   }
 
-  // Initialize sensors, SD card and RTC
+  // Initialize SD card
   sdSetup();
-  sensorSetup();
-  rtcSetup();
-
-  // Initialize event memory to 0
-  initEventMemory();
 
   // SD card check
   if (sdDiagnosticCheck) {
@@ -127,6 +124,14 @@ void setup() {
     myFile.close();
     Serial.println("done.");
   }
+
+  delay(1000);
+  // Initialize sensors and RTC
+  sensorSetup();
+  rtcSetup();  
+
+  // Initialize event memory to 0
+  initEventMemory();
 }
 //------------------------------------------------------------------------------
 void loop() {
